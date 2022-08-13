@@ -16,7 +16,7 @@ async def basic_commands(message):
     markup.add(types.KeyboardButton(text='Поддержка'))
     text = msg_text.RegularUser().start()
     await bot.send_message(message.chat.id, text, reply_markup=markup)
-
+    await services(message)
 
 async def services(message):
     text = msg_text.RegularUser().services()
