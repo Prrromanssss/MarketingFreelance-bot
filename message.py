@@ -13,12 +13,44 @@ class RegularUser(BaseMessages):
                'Давайте я помогу Вам в выборе услуги. '
         return text
 
-    def services(self):
-        text = 'Что вас интересует? '
-        return text
-
 
 class AdminUser(BaseMessages):
     def start(self):
         text = ''
         return text
+
+
+class Basement:
+    def services(self):
+        text = 'Что вас интересует? '
+        return text
+
+    def about(self):
+        text = ''
+        return text
+
+    def support(self):
+        text = ''
+        return text
+
+
+class DevelopBots:
+    ...
+
+
+class Bloggers:
+    ...
+
+
+class PromotionTelegram:
+    ...
+
+
+class Sites:
+    ...
+
+
+class Design:
+    ...
+
+
