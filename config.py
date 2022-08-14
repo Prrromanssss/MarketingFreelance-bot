@@ -9,5 +9,5 @@ ADMINS = {
           'sourr_cream': 1921020697
          }
 
-DOCUMENT_SITE = ''
-DOCUMENT_DESIGN = ''
+DOCUMENT_SITE = 'documents/ТЗ БОТ1.docx'
+DOCUMENT_DESIGN = 'documents/ТЗ БОТ1.docx'

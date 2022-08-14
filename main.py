@@ -28,6 +28,15 @@ def clear_flags(message, callback=False, not_delete=()):
                 pass
 
 
+async def send_msg(message, text_user, text_admin, admins=('sourr_cream', 'sourr_cream')):
+    clear_flags(message)
+    await bot.send_message(chat_id=message.chat.id, text=text_user, parse_mode='html')
+    for admin in admins:
+        await bot.send_message(chat_id=config.ADMINS[admin], text=text_admin, parse_mode='html')
+
+
+
+
 @bot.message_handler(commands=['start'])
 async def basic_commands(message):
     models.db_object.db_insert(message)
@@ -60,32 +69,22 @@ async def get_messages(message):
         text = msg_text.base.support_start()
         await bot.send_message(chat_id=message.chat.id, text=text)
     elif msg_text.dev_bots.flag_develop_bots.get(message.chat.id):
-        clear_flags(message)
-        text = message.text
-        await bot.send_message(chat_id=config.ADMINS['sourr_cream'], text=text)  # decotto
-        await bot.send_message(chat_id=config.ADMINS['sourr_cream'], text=text)  # qzark
-        text = msg_text.dev_bots.finish()
-        await bot.send_message(chat_id=message.chat.id, text=text)
+        text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
+        await send_msg(message=message, text_user=msg_text.dev_bots.finish(), text_admin=text_admin)
     elif msg_text.prom_tg.flag_prom_tg.get(message.chat.id):
-        text = f'<strong>{msg_text.prom_tg.category.get(message.chat.id)}</strong>\n{message.text}'
-        clear_flags(message)
-        await bot.send_message(chat_id=config.ADMINS['sourr_cream'], text=text, parse_mode='html')  # qzark
-        text = msg_text.prom_tg.finish()
-        await bot.send_message(chat_id=message.chat.id, text=text)
+        text_admin = f'{msg_text.base.category.get(message.chat.id)}\n' \
+                     f'<strong>{msg_text.prom_tg.category.get(message.chat.id)}</strong>\n{message.text}'
+        await send_msg(message=message, text_user=msg_text.prom_tg.finish(), admins=('sourr_cream',),  # qzark
+                       text_admin=text_admin)
     elif msg_text.base.flag_support.get(message.chat.id):
-        clear_flags(message)
-        text = msg_text.base.support_finish()
-        await bot.send_message(chat_id=message.chat.id, text=text)
-        text = message.text
-        await bot.send_message(chat_id=config.ADMINS['sourr_cream'], text=text)  # qzark
-        await bot.send_message(chat_id=config.ADMINS['sourr_cream'], text=text)  # decotto
+        text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
+        await send_msg(message=message, text_user=msg_text.base.support_finish(), text_admin=text_admin)
     elif msg_text.site.flag_sites.get(message.chat.id) or msg_text.design_obj.flag_design.get(message.chat.id):
-        clear_flags(message)
-        text = msg_text.dev_bots.finish()
-        await bot.send_message(chat_id=message.chat.id, text=text)
-        text = message.text
-        await bot.send_message(chat_id=config.ADMINS['sourr_cream'], text=text)  # qzark
-        await bot.send_message(chat_id=config.ADMINS['sourr_cream'], text=text)  # decotto
+        text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
+        await send_msg(message=message, text_user=msg_text.dev_bots.finish(), text_admin=text_admin)
+    elif msg_text.design_obj.flag_sup_brief.get(message.chat.id) or msg_text.site.flag_sup_brief.get(message.chat.id):
+        text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
+        await send_msg(message=message, text_user=msg_text.base.support_finish(), text_admin=text_admin)
 
 
 async def services(message):
@@ -101,6 +100,7 @@ async def services(message):
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'develop_bots')
 async def develop_bots(callback):
+    msg_text.base.category[callback.message.chat.id] = f'<strong>Разработка чат-ботов</strong>'
     text = msg_text.dev_bots.start()
     msg_text.dev_bots.flag_develop_bots[callback.message.chat.id] = True
     await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text)
@@ -108,11 +108,13 @@ async def develop_bots(callback):
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'bloggers')
 async def bloggers(callback):
+    msg_text.base.category[callback.message.chat.id] = f'<strong>Реклама у блогеров</strong>'
     ...
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'promotion_telegram')
 async def prom_telegram(callback):
+    msg_text.base.category[callback.message.chat.id] = f'<strong>Продвижение в телеграмм</strong>'
     markup = types.InlineKeyboardMarkup(row_width=3)
     markup.add(types.InlineKeyboardButton(text='Рассылки в Telegram', callback_data='prom_tg_1'))
     markup.add(types.InlineKeyboardButton(text='Парсинг подписчиков', callback_data='prom_tg_2'))
@@ -143,6 +145,7 @@ async def prom_telegram_2(callback):
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'sites')
 async def sites(callback):
+    msg_text.base.category[callback.message.chat.id] = f'<strong>Создание сайтов</strong>'
     text = msg_text.site.start()
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton(text='Заполнить бриф', callback_data='brief_site_1'))
@@ -163,9 +166,10 @@ async def brief(callback):
         elif 'design' in callback.data:
             msg_text.design_obj.flag_design[callback.message.chat.id] = True
             document = config.DOCUMENT_DESIGN
+        with open(document) as file:
+            docx = file.read()
         await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text)
-        await bot.send_document(chat_id=callback.message.chat.id, document=document)
-
+        await bot.send_document(chat_id=callback.message.chat.id, document=docx)
 
     elif callback.data.split('_')[-1] == '2':
         msg_text.site.flag_sup_brief[callback.message.chat.id] = True
@@ -176,6 +180,7 @@ async def brief(callback):
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'design')
 async def design(callback):
+    msg_text.base.category[callback.message.chat.id] = f'<strong>Дизайн</strong>'
     text = msg_text.design_obj.start()
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton(text='Заполнить бриф', callback_data='brief_design_1'))
