@@ -5,6 +5,7 @@ import message as msg_text
 from telebot import types
 import models
 
+
 bot = telebot.async_telebot.AsyncTeleBot(config.BOT_TOKEN)
 
 
@@ -41,13 +42,13 @@ async def get_messages(message):
         await bot.send_message(config.ADMINS['sourr_cream'], message.text)  # decotto
         await bot.send_message(config.ADMINS['sourr_cream'], message.text)  # qzark
         text = msg_text.dev_bots.finish()
-        await bot.send_message(message.chat.id, text)
+        await bot.edit_message_text(chat_id=message.chat.id, message_id=message.id, text=text)
     elif msg_text.prom_tg.flag_prom_tg.get(message.chat.id):
         del msg_text.prom_tg.flag_prom_tg[message.chat.id]
         await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         await bot.send_message(config.ADMINS['sourr_cream'], message.text)  # qzark
         text = msg_text.prom_tg.finish()
-        await bot.send_message(message.chat.id, text)
+        await bot.edit_message_text(chat_id=message.chat.id, message_id=message.id, text=text)
 
 
 async def services(message):
@@ -65,7 +66,7 @@ async def services(message):
 async def develop_bots(callback):
     text = msg_text.dev_bots.start()
     msg_text.dev_bots.flag_develop_bots[callback.message.chat.id] = True
-    await bot.send_message(callback.message.chat.id, text)
+    await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'bloggers')
@@ -84,14 +85,15 @@ async def prom_telegram(callback):
     markup.add(types.InlineKeyboardButton(text='Посев нативных комментариев', callback_data='prom_tg__2'))
     text = msg_text.prom_tg.start()
     msg_text.prom_tg.flag_prom_tg[callback.message.chat.id] = True
-    await bot.send_message(callback.message.chat.id, text, reply_markup=markup)
+    await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text,
+                                reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg__2')
 async def prom_telegram_2(callback):
     text = msg_text.prom_tg.prom_tg_markup()
     msg_text.prom_tg.flag_prom_tg[callback.message.chat.id] = True
-    await bot.send_message(callback.message.chat.id, text)
+    await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text)
 
 
 
