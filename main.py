@@ -26,7 +26,7 @@ def clear_flags(message, callback=False, not_delete=()):
                 pass
 
 
-async def send_msg(message, text_user, text_admin, admins=('sourr_cream', 'sourr_cream')):
+async def send_msg(message, text_user, text_admin=None, admins=('sourr_cream', 'sourr_cream')):
     clear_flags(message)
     await bot.send_message(chat_id=message.chat.id, text=text_user, parse_mode='html')
     for admin in admins:
@@ -85,9 +85,7 @@ async def get_messages(message):
         text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
         await send_msg(message=message, text_user=msg_text.base.support_finish(), text_admin=text_admin)
     else:
-        await bot.send_message(
-            message.chat.id, 'Мы вас не понимаем'
-        )
+        await send_msg(message=message, text_user=msg_text.base.unknown(), admins=())
 
 
 async def services(message):
