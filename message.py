@@ -26,11 +26,15 @@ class Basement:
         return text
 
     def about(self):
-        text = ''
+        text = 'О нас'
         return text
 
-    def support(self):
-        text = ''
+    def support_start(self):
+        text = 'Напишите Ваш вопрос'
+        return text
+
+    def support_finish(self):
+        text = 'Мы уже работаем над решением проблемы, ожидайте ответа.'
         return text
 
 
@@ -59,6 +63,7 @@ class Bloggers(BaseMessages):
 class PromotionTelegram(BaseMessages):
     def __init__(self):
         self.flag_prom_tg = {}
+        self.category = {}
 
     def start(self):
         text = 'Если вам нужно продвинуть ваши товары/услуги в telegram, то Вы обратились по адресу'
