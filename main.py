@@ -69,7 +69,7 @@ async def get_messages(message):
     elif msg_text.prom_tg.flag_prom_tg.get(message.chat.id):
         text = f'<strong>{msg_text.prom_tg.category.get(message.chat.id)}</strong>\n{message.text}'
         clear_flags(message)
-        await bot.send_message(chat_id=config.ADMINS['sourr_cream'], text=text)  # qzark
+        await bot.send_message(chat_id=config.ADMINS['sourr_cream'], text=text, parse_mode='html')  # qzark
         text = msg_text.prom_tg.finish()
         await bot.send_message(chat_id=message.chat.id, text=text)
     elif msg_text.base.flag_support.get(message.chat.id):
@@ -148,7 +148,8 @@ async def sites(callback):
     markup.add(types.InlineKeyboardButton(text='Заполнить бриф', callback_data='brief_site_1'))
     markup.add(types.InlineKeyboardButton(text='Нужна помощь специалиста',
                                           callback_data='brief_site_2'))
-    await bot.send_message(chat_id=callback.message.chat.id, text=text, reply_markup=markup)
+    await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
+                                text=text, reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda callback: 'brief' in callback.data)
@@ -162,14 +163,15 @@ async def brief(callback):
         elif 'design' in callback.data:
             msg_text.design_obj.flag_design[callback.message.chat.id] = True
             document = config.DOCUMENT_DESIGN
+        await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text)
         await bot.send_document(chat_id=callback.message.chat.id, document=document)
-        await bot.send_message(chat_id=callback.message.chat.id, text=text)
+
 
     elif callback.data.split('_')[-1] == '2':
         msg_text.site.flag_sup_brief[callback.message.chat.id] = True
         msg_text.design_obj.flag_sup_brief[callback.message.chat.id] = True
         text = msg_text.site.sup_brief()
-        await bot.send_message(chat_id=callback.message.chat.id, text=text)
+        await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'design')
