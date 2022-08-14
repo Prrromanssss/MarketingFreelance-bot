@@ -7,4 +7,7 @@ ADMINS = {
           'qzark': 1876519381,
           'decotto': 944048397,
           'sourr_cream': 1921020697
-         }   
+         }
+
+DOCUMENT_SITE = ''
+DOCUMENT_DESIGN = ''

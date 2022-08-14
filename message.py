@@ -21,6 +21,10 @@ class AdminUser(BaseMessages):
 
 
 class Basement:
+    def __init__(self):
+        self.flag_support = {}
+        self.category = {}
+
     def services(self):
         text = 'Что вас интересует? '
         return text
@@ -81,19 +85,45 @@ class PromotionTelegram(BaseMessages):
 class Sites(BaseMessages):
     def __init__(self):
         self.flag_sites = {}
+        self.flag_sup_brief = {}
 
     def start(self):
         text = 'Вы уже знаете, какой сайт Вы хотите и готовы заполнить бриф для создания сайта' \
                ' или нужна помощь специалиста?'
         return text
 
+    def fill_brief(self):
+        text = 'Заполните бриф и пришлите его нам'
+        return text
+
+    def sup_brief(self):
+        text = 'Укажите ваши контактные данные и удобное время для связи'
+        return text
+
+    def finish(self):
+        text = 'Благодарим за заказ, мы свяжемся с вами в ближайшее время'
+        return text
+
 
 class Design(BaseMessages):
     def __init__(self):
         self.flag_design = {}
+        self.flag_sup_brief = {}
 
     def start(self):
         text = 'Вы уже знаете, какой дизайн Вы хотите и готовы заполнить бриф или нужна помощь специалиста?'
+        return text
+
+    def fill_brief(self):
+        text = 'Заполните бриф и пришлите его нам'
+        return text
+
+    def sup_brief(self):
+        text = 'Укажите ваши контактные данные и удобное время для связи'
+        return text
+
+    def finish(self):
+        text = 'Благодарим за заказ, мы свяжемся с вами в ближайшее время'
         return text
 
 
@@ -102,3 +132,4 @@ blog = Bloggers()
 prom_tg = PromotionTelegram()
 site = Sites()
 design_obj = Design()
+base = Basement()
