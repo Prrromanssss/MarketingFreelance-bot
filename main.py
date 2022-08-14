@@ -167,7 +167,7 @@ async def brief(callback):
         elif 'design' in callback.data:
             msg_text.design_obj.flag_design[callback.message.chat.id] = True
             document = config.DOCUMENT_DESIGN
-        with open(document, encoding='unicode_escape') as file:
+        with open(document, encoding='utf-8') as file:
             docx = file.read()
         await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text)
         await bot.send_document(chat_id=callback.message.chat.id, document=docx)
