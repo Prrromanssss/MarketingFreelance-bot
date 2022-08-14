@@ -9,19 +9,21 @@ import models
 bot = telebot.async_telebot.AsyncTeleBot(config.BOT_TOKEN)
 
 
-async def clear_flags(message, not_delete=()):
+def clear_flags(message, callback=False, not_delete=()):
+    if callback:
+        message = message.message
     flags = (
-             'msg_text.dev_bots.flag_develop_bots[message.chat.id]', 'msg_text.prom_tg.flag_prom_tg[message.chat.id]',
-             'msg_text.prom_tg.category[message.chat.id]', 'msg_text.base.flag_support[message.chat.id]',
-             'msg_text.site.flag_sites[callback.message.chat.id]', ''
-             'msg_text.design_obj.flag_design[callback.message.chat.id]',
-             'msg_text.site.flag_sup_brief[callback.message.chat.id]',
-             'msg_text.design_obj.flag_sup_brief[callback.message.chat.id]'
+             'msg_text.dev_bots.flag_develop_bots', 'msg_text.prom_tg.flag_prom_tg',
+             'msg_text.prom_tg.category', 'msg_text.base.flag_support',
+             'msg_text.site.flag_sites',
+             'msg_text.design_obj.flag_design',
+             'msg_text.site.flag_sup_brief',
+             'msg_text.design_obj.flag_sup_brief'
              )
     for flag in flags:
         if flag not in not_delete:
             try:
-                await eval(f'del {flag}')
+                eval(f'{flag}.pop(message.chat.id)')
             except KeyError:
                 pass
 
@@ -46,22 +48,19 @@ async def administration(message):
 @bot.message_handler(content_types=['text'])
 async def get_messages(message):
     if message.text == 'О нас':
-        try:
-            await clear_flags(message)
-        except Exception as e:
-            print(e)
+        clear_flags(message)
         text = msg_text.base.about()
         await bot.send_message(chat_id=message.chat.id, text=text)
     elif message.text == 'Услуги':
-        await clear_flags(message)
+        clear_flags(message)
         await services(message)
     elif message.text == 'Поддержка':
-        await clear_flags(message, not_delete=('msg_text.base.flag_support[message.chat.id]',))
+        clear_flags(message, not_delete=('msg_text.base.flag_support',))
         msg_text.base.flag_support[message.chat.id] = True
         text = msg_text.base.support_start()
         await bot.send_message(chat_id=message.chat.id, text=text)
     elif msg_text.dev_bots.flag_develop_bots.get(message.chat.id):
-        await clear_flags(message)
+        clear_flags(message)
         text = message.text
         await bot.send_message(chat_id=config.ADMINS['sourr_cream'], text=text)  # decotto
         await bot.send_message(chat_id=config.ADMINS['sourr_cream'], text=text)  # qzark
@@ -69,19 +68,19 @@ async def get_messages(message):
         await bot.send_message(chat_id=message.chat.id, text=text)
     elif msg_text.prom_tg.flag_prom_tg.get(message.chat.id):
         text = f'<strong>{msg_text.prom_tg.category.get(message.chat.id)}</strong>\n{message.text}'
-        await clear_flags(message)
+        clear_flags(message)
         await bot.send_message(chat_id=config.ADMINS['sourr_cream'], text=text)  # qzark
         text = msg_text.prom_tg.finish()
         await bot.send_message(chat_id=message.chat.id, text=text)
     elif msg_text.base.flag_support.get(message.chat.id):
-        await clear_flags(message)
+        clear_flags(message)
         text = msg_text.base.support_finish()
         await bot.send_message(chat_id=message.chat.id, text=text)
         text = message.text
         await bot.send_message(chat_id=config.ADMINS['sourr_cream'], text=text)  # qzark
         await bot.send_message(chat_id=config.ADMINS['sourr_cream'], text=text)  # decotto
     elif msg_text.site.flag_sites.get(message.chat.id) or msg_text.design_obj.flag_design.get(message.chat.id):
-        await clear_flags(message)
+        clear_flags(message)
         text = msg_text.dev_bots.finish()
         await bot.send_message(chat_id=message.chat.id, text=text)
         text = message.text
@@ -173,7 +172,6 @@ async def brief(callback):
         await bot.send_message(chat_id=callback.message.chat.id, text=text)
 
 
-
 @bot.callback_query_handler(func=lambda callback: callback.data == 'design')
 async def design(callback):
     text = msg_text.design_obj.start()
@@ -195,7 +193,7 @@ async def get_docs(message):
         await bot.send_document(chat_id=config.ADMINS['sourr_cream'], document=message.document.file_id)  # qzark
         await bot.send_message(chat_id=config.ADMINS['sourr_cream'], text=text_category, parse_mode='html')  # decotto
         await bot.send_document(chat_id=config.ADMINS['sourr_cream'], document=message.document.file_id)  # decotto
-    await clear_flags(message)
+    clear_flags(message)
 
 
 async def main():
