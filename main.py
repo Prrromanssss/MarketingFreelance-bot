@@ -21,7 +21,7 @@ async def clear_flags(message, not_delete=()):
     for flag in flags:
         if flag not in not_delete:
             try:
-                eval(f'del {flag}')
+                await eval(f'del {flag}')
             except KeyError:
                 pass
 
