@@ -64,6 +64,7 @@ async def get_messages(message):
         clear_flags(message)
         await services(message)
     elif message.text == 'Поддержка':
+        msg_text.base.category[message.chat.id] = '<strong>Поддержка</strong>'
         clear_flags(message, not_delete=('msg_text.base.flag_support',))
         msg_text.base.flag_support[message.chat.id] = True
         text = msg_text.base.support_start()
@@ -166,7 +167,7 @@ async def brief(callback):
         elif 'design' in callback.data:
             msg_text.design_obj.flag_design[callback.message.chat.id] = True
             document = config.DOCUMENT_DESIGN
-        with open(document) as file:
+        with open(document, encoding='utf-8') as file:
             docx = file.read()
         await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text)
         await bot.send_document(chat_id=callback.message.chat.id, document=docx)
@@ -175,6 +176,7 @@ async def brief(callback):
         msg_text.site.flag_sup_brief[callback.message.chat.id] = True
         msg_text.design_obj.flag_sup_brief[callback.message.chat.id] = True
         text = msg_text.site.sup_brief()
+        msg_text.base.category[callback.message.chat.id] += '\n<strong>Нужна помощь специалиста</strong>'
         await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text)
 
 
@@ -186,7 +188,8 @@ async def design(callback):
     markup.add(types.InlineKeyboardButton(text='Заполнить бриф', callback_data='brief_design_1'))
     markup.add(types.InlineKeyboardButton(text='Нужна помощь специалиста',
                                           callback_data='brief_design_2'))
-    await bot.send_message(chat_id=callback.message.chat.id, text=text, reply_markup=markup)
+    await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
+                                text=text, reply_markup=markup)
 
 
 @bot.message_handler(content_types=['document'])
