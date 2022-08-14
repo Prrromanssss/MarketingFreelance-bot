@@ -28,6 +28,7 @@ async def administration(message):
 
 @bot.message_handler(content_types=['text'])
 async def get_messages(message):
+    print(message)
     if message.text == 'О нас':
         text = msg_text.Basement().about()
         await bot.send_message(message.chat.id, text)
@@ -42,13 +43,13 @@ async def get_messages(message):
         await bot.send_message(config.ADMINS['sourr_cream'], message.text)  # decotto
         await bot.send_message(config.ADMINS['sourr_cream'], message.text)  # qzark
         text = msg_text.dev_bots.finish()
-        await bot.edit_message_text(chat_id=message.chat.id, message_id=message.id, text=text)
+        await bot.send_message(chat_id=message.chat.id, text=text)
     elif msg_text.prom_tg.flag_prom_tg.get(message.chat.id):
         del msg_text.prom_tg.flag_prom_tg[message.chat.id]
         await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         await bot.send_message(config.ADMINS['sourr_cream'], message.text)  # qzark
         text = msg_text.prom_tg.finish()
-        await bot.edit_message_text(chat_id=message.chat.id, message_id=message.id, text=text)
+        await bot.send_message(chat_id=message.chat.id, text=text)
 
 
 async def services(message):
