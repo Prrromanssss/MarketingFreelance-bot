@@ -86,6 +86,7 @@ class Sites(BaseMessages):
     def __init__(self):
         self.flag_sites = {}
         self.flag_sup_brief = {}
+        self.send_doc = {}
 
     def start(self):
         text = 'Вы уже знаете, какой сайт Вы хотите и готовы заполнить бриф для создания сайта' \
@@ -109,6 +110,7 @@ class Design(BaseMessages):
     def __init__(self):
         self.flag_design = {}
         self.flag_sup_brief = {}
+        self.send_doc = {}
 
     def start(self):
         text = 'Вы уже знаете, какой дизайн Вы хотите и готовы заполнить бриф или нужна помощь специалиста?'

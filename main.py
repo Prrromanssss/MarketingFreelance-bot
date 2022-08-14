@@ -14,11 +14,9 @@ def clear_flags(message, callback=False, not_delete=()):
         message = message.message
     flags = (
              'msg_text.dev_bots.flag_develop_bots', 'msg_text.prom_tg.flag_prom_tg',
-             'msg_text.prom_tg.category', 'msg_text.base.flag_support',
-             'msg_text.site.flag_sites',
-             'msg_text.design_obj.flag_design',
-             'msg_text.site.flag_sup_brief',
-             'msg_text.design_obj.flag_sup_brief'
+             'msg_text.prom_tg.category', 'msg_text.base.flag_support', 'msg_text.site.flag_sites',
+             'msg_text.design_obj.flag_design', 'msg_text.site.flag_sup_brief',
+             'msg_text.design_obj.flag_sup_brief', 'msg_text.design_obj.send_doc', 'msg_text.site.send_doc'
              )
     for flag in flags:
         if flag not in not_delete:
@@ -80,12 +78,16 @@ async def get_messages(message):
     elif msg_text.base.flag_support.get(message.chat.id):
         text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
         await send_msg(message=message, text_user=msg_text.base.support_finish(), text_admin=text_admin)
-    elif msg_text.site.flag_sites.get(message.chat.id) or msg_text.design_obj.flag_design.get(message.chat.id):
+    elif msg_text.site.send_doc.get(message.chat.id) or msg_text.design_obj.send_doc.get(message.chat.id):
         text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
         await send_msg(message=message, text_user=msg_text.dev_bots.finish(), text_admin=text_admin)
     elif msg_text.design_obj.flag_sup_brief.get(message.chat.id) or msg_text.site.flag_sup_brief.get(message.chat.id):
         text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
         await send_msg(message=message, text_user=msg_text.base.support_finish(), text_admin=text_admin)
+    else:
+        await bot.send_message(
+            message.chat.id, 'Мы вас не понимаем'
+        )
 
 
 async def services(message):
@@ -195,6 +197,8 @@ async def design(callback):
 @bot.message_handler(content_types=['document'])
 async def get_docs(message):
     if msg_text.site.flag_sites.get(message.chat.id) or msg_text.design_obj.flag_design.get(message.chat.id):
+        msg_text.site.send_doc[message.chat.id] = True
+        msg_text.design_obj.send_doc[message.chat.id] = True
         text = msg_text.site.finish()
         category = msg_text.base.category.get(message.chat.id)
         text_category = f'<strong>{category}</strong>\n'
