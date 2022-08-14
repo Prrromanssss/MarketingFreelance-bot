@@ -46,7 +46,10 @@ async def administration(message):
 @bot.message_handler(content_types=['text'])
 async def get_messages(message):
     if message.text == 'О нас':
-        await clear_flags(message)
+        try:
+            await clear_flags(message)
+        except Exception as e:
+            print(e)
         text = msg_text.base.about()
         await bot.send_message(chat_id=message.chat.id, text=text)
     elif message.text == 'Услуги':
