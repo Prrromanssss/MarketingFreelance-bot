@@ -5,5 +5,6 @@ DB_URI = 'postgres://phusprdkozrrbk:9c9a7a82225454b7d5b51d02eaee395ff5722fb6c9cc
 DB_TABLE = 'db_users'
 ADMINS = {
           'qzark': 1876519381,
-          'decotto': 944048397
+          'decotto': 944048397,
+          'sourr_cream': 1921020697
          }   

@@ -34,23 +34,66 @@ class Basement:
         return text
 
 
-class DevelopBots:
-    ...
+class DevelopBots(BaseMessages):
+    def __init__(self):
+        self.flag_develop_bots = {}
+
+    def start(self):
+        text = 'Расскажите какие задачи должен выполнять чат-бот и какой функционал Вам интересен'
+        return text
+
+    def finish(self):
+        text = 'Благодарим за сообщение, мы свяжемся с Вами в ближайшее время!'
+        return text
 
 
-class Bloggers:
-    ...
+class Bloggers(BaseMessages):
+    def __init__(self):
+        self.flag_bloggers = {}
+
+    def start(self):
+        text = 'Что Вы хотите рекламировать?'
+        return text
 
 
-class PromotionTelegram:
-    ...
+class PromotionTelegram(BaseMessages):
+    def __init__(self):
+        self.flag_prom_tg = {}
+
+    def start(self):
+        text = 'Если вам нужно продвинуть ваши товары/услуги в telegram, то Вы обратились по адресу'
+        return text
+
+    def prom_tg_markup(self):
+        text = 'Опишите ваши задачи, пришлите ссылку на ваш канал/группу или сайт и оставьте ваши контакты'
+        return text
+
+    def finish(self):
+        text = 'Благодарим за заказ, мы свяжемся с вами в ближайшее время'
+        return text
 
 
-class Sites:
-    ...
+class Sites(BaseMessages):
+    def __init__(self):
+        self.flag_sites = {}
+
+    def start(self):
+        text = 'Вы уже знаете, какой сайт Вы хотите и готовы заполнить бриф для создания сайта' \
+               ' или нужна помощь специалиста?'
+        return text
 
 
-class Design:
-    ...
+class Design(BaseMessages):
+    def __init__(self):
+        self.flag_design = {}
+
+    def start(self):
+        text = 'Вы уже знаете, какой дизайн Вы хотите и готовы заполнить бриф или нужна помощь специалиста?'
+        return text
 
 
+dev_bots = DevelopBots()
+blog = Bloggers()
+prom_tg = PromotionTelegram()
+site = Sites()
+design_obj = Design()
