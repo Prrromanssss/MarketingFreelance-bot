@@ -27,7 +27,7 @@ class UserData:
         val = (message.chat.id, )
         sql_query = f'SELECT username FROM {config.DB_TABLE} WHERE user_id = %s'
         cursor.execute(sql_query, val)
-        username = cursor.fetchall()[0]
+        username = cursor.fetchall()[0][0]
         conn.commit()
         return username
 

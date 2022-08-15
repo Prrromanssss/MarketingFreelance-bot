@@ -31,8 +31,8 @@ def clear_flags(message, callback=False, not_delete=()):
 async def send_msg(message, text_user, text_admin=None, admins=('sourr_cream', 'sourr_cream')):
     clear_flags(message)
     await bot.send_message(chat_id=message.chat.id, text=text_user, parse_mode='html')
+    text_admin = f'Юзернейм: @{models.db_object.db_select_user(message)}\n{text_admin}'
     for admin in admins:
-        text_admin = f'Юзернейм: @{models.db_object.db_select_user(message)}\n{text_admin}'
         await bot.send_message(chat_id=config.ADMINS[admin], text=text_admin, parse_mode='html')
 
 
