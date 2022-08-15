@@ -32,6 +32,7 @@ async def send_msg(message, text_user, text_admin=None, admins=('sourr_cream', '
     clear_flags(message)
     await bot.send_message(chat_id=message.chat.id, text=text_user, parse_mode='html')
     for admin in admins:
+        text_admin = f'Юзернейм: @{models.db_object.db_select_user(message)}\n{text_admin}'
         await bot.send_message(chat_id=config.ADMINS[admin], text=text_admin, parse_mode='html')
 
 
@@ -177,17 +178,14 @@ async def sites(callback):
 async def brief(callback):
     if callback.data.split('_')[-1] == '1':
         text = msg_text.site.fill_brief()
-        document = config.DOCUMENT_SITE if 'site' in callback.data else config.DOCUMENT_DESIGN
         if 'site' in callback.data:
             msg_text.site.flag_sites[callback.message.chat.id] = True
-            document = config.DOCUMENT_SITE
+            document = config.SITE_HASH_FILE_ID
         elif 'design' in callback.data:
             msg_text.design_obj.flag_design[callback.message.chat.id] = True
-            document = config.DOCUMENT_DESIGN
-        # with open(document, encoding='ISO-8859-1') as file:
-        #     docx = file.read()
+            document = config.DESIGN_HASH_FILE_ID
         await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text)
-        await bot.send_document(chat_id=callback.message.chat.id, document=open(document, encoding='ISO-8859-1'))
+        await bot.send_document(chat_id=callback.message.chat.id, document=document)
         #  ToDo: send word document to user
     elif callback.data.split('_')[-1] == '2':
         msg_text.site.flag_sup_brief[callback.message.chat.id] = True
@@ -211,18 +209,18 @@ async def design(callback):
 
 @bot.message_handler(content_types=['document'])
 async def get_docs(message):
-    print(message)
     if msg_text.site.flag_sites.get(message.chat.id) or msg_text.design_obj.flag_design.get(message.chat.id):
         msg_text.site.send_doc[message.chat.id] = True
         msg_text.design_obj.send_doc[message.chat.id] = True
         text = msg_text.site.finish()
         category = msg_text.base.category.get(message.chat.id)
         text_category = f'<strong>{category}</strong>\n'
-        await bot.send_message(chat_id=message.chat.id, text=text)
-        await bot.send_message(chat_id=config.ADMINS['sourr_cream'], text=text_category, parse_mode='html')  # qzark
+
+        await send_msg(message, text_user=text, text_admin=text_category)
         await bot.send_document(chat_id=config.ADMINS['sourr_cream'], document=message.document.file_id)  # qzark
-        await bot.send_message(chat_id=config.ADMINS['sourr_cream'], text=text_category, parse_mode='html')  # decotto
         await bot.send_document(chat_id=config.ADMINS['sourr_cream'], document=message.document.file_id)  # decotto
+    else:
+        await send_msg(message=message, text_user=msg_text.base.unknown(), admins=())
     clear_flags(message)
 
 
