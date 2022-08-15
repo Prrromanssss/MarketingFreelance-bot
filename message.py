@@ -62,9 +62,28 @@ class DevelopBots(BaseMessages):
 class Bloggers(BaseMessages):
     def __init__(self):
         self.flag_bloggers = {}
+        self.flag_network = {}
+        self.flag_aim = {}
+        self.flag_budget = {}
 
     def start(self):
         text = 'Что Вы хотите рекламировать?'
+        return text
+
+    def network(self):
+        text = 'В какой социальной сети?'
+        return text
+
+    def aim(self):
+        text = 'Кто является вашей целевой аудиторией? Опишите портрет клиента'
+        return text
+
+    def budget(self):
+        text = 'Какой у Вас рекламный бюджет?'
+        return text
+
+    def finish(self):
+        text = 'Благодарим за заказ, мы свяжемся с Вами в ближайшее время!'
         return text
 
 

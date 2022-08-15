@@ -16,7 +16,9 @@ def clear_flags(message, callback=False, not_delete=()):
              'msg_text.dev_bots.flag_develop_bots', 'msg_text.prom_tg.flag_prom_tg',
              'msg_text.prom_tg.category', 'msg_text.base.flag_support', 'msg_text.site.flag_sites',
              'msg_text.design_obj.flag_design', 'msg_text.site.flag_sup_brief',
-             'msg_text.design_obj.flag_sup_brief', 'msg_text.design_obj.send_doc', 'msg_text.site.send_doc'
+             'msg_text.design_obj.flag_sup_brief', 'msg_text.design_obj.send_doc', 'msg_text.site.send_doc',
+             'msg_text.blog.flag_for_bloggers', 'msg_text.blog.flag_network', 'msg_text.blog.flag_aim',
+             'msg_text.blog.flag_budget'
              )
     for flag in flags:
         if flag not in not_delete:
@@ -33,8 +35,6 @@ async def send_msg(message, text_user, text_admin=None, admins=('sourr_cream', '
         await bot.send_message(chat_id=config.ADMINS[admin], text=text_admin, parse_mode='html')
 
 
-
-
 @bot.message_handler(commands=['start'])
 async def basic_commands(message):
     models.db_object.db_insert(message)
@@ -49,7 +49,7 @@ async def basic_commands(message):
 
 @bot.message_handler(commands=['admin'])
 async def administration(message):
-    ...
+    ...  # ToDO: administration
 
 
 @bot.message_handler(content_types=['text'])
@@ -84,6 +84,17 @@ async def get_messages(message):
     elif msg_text.design_obj.flag_sup_brief.get(message.chat.id) or msg_text.site.flag_sup_brief.get(message.chat.id):
         text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
         await send_msg(message=message, text_user=msg_text.base.support_finish(), text_admin=text_admin)
+    elif msg_text.blog.flag_bloggers.get(message.chat.id):
+        await send_msg(message, text_user=msg_text.blog.network(), admins=())  #ToDo: create pol
+        msg_text.blog.flag_network[message.chat.id] = True
+    elif msg_text.blog.flag_network.get(message.chat.id):
+        await send_msg(message, text_user=msg_text.blog.aim(), admins=())
+        msg_text.blog.flag_aim[message.chat.id] = True
+    elif msg_text.blog.flag_aim.get(message.chat.id):
+        await send_msg(message, text_user=msg_text.blog.budget(), admins=())
+        msg_text.blog.flag_budget[message.chat.id] = True
+    elif msg_text.blog.flag_budget.get(message.chat.id):
+        await send_msg(message, text_user=msg_text.blog.finish(), admins=())
     else:
         await send_msg(message=message, text_user=msg_text.base.unknown(), admins=())
 
@@ -110,7 +121,9 @@ async def develop_bots(callback):
 @bot.callback_query_handler(func=lambda callback: callback.data == 'bloggers')
 async def bloggers(callback):
     msg_text.base.category[callback.message.chat.id] = f'<strong>Реклама у блогеров</strong>'
-    ...
+    text = msg_text.blog.start()
+    msg_text.blog.flag_bloggers[callback.message.chat.id] = True
+    await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'promotion_telegram')
@@ -171,7 +184,7 @@ async def brief(callback):
         #     docx = file.read()
         await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text)
         await bot.send_document(chat_id=callback.message.chat.id, document=open(document, encoding='ISO-8859-1'))
-
+        #  ToDo: send word document to user
     elif callback.data.split('_')[-1] == '2':
         msg_text.site.flag_sup_brief[callback.message.chat.id] = True
         msg_text.design_obj.flag_sup_brief[callback.message.chat.id] = True
