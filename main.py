@@ -18,7 +18,7 @@ def clear_flags(message, callback=False, not_delete=()):
              'msg_text.design_obj.flag_design', 'msg_text.site.flag_sup_brief',
              'msg_text.design_obj.flag_sup_brief', 'msg_text.design_obj.send_doc', 'msg_text.site.send_doc',
              'msg_text.blog.flag_for_bloggers', 'msg_text.blog.flag_network', 'msg_text.blog.flag_aim',
-             'msg_text.blog.flag_budget'
+             'msg_text.blog.flag_budget', 'msg_text.admin.flag_for_password', 'msg_text.admin.flag_newsletter'
              )
     for flag in flags:
         if flag not in not_delete:
@@ -50,7 +50,8 @@ async def basic_commands(message):
 
 @bot.message_handler(commands=['admin'])
 async def administration(message):
-    ...  # ToDO: administration
+    await send_msg(message, text_user=msg_text.admin.write_password(), admins=())
+    msg_text.admin.flag_for_password[message.chat.id] = True
 
 
 @bot.message_handler(content_types=['text'])
@@ -68,6 +69,9 @@ async def get_messages(message):
         msg_text.base.flag_support[message.chat.id] = True
         text = msg_text.base.support_start()
         await bot.send_message(chat_id=message.chat.id, text=text)
+    elif message.text == '<< Назад':
+        clear_flags(message)
+        await services(message)
     elif msg_text.dev_bots.flag_develop_bots.get(message.chat.id):
         text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
         await send_msg(message=message, text_user=msg_text.dev_bots.finish(), text_admin=text_admin)
@@ -100,6 +104,15 @@ async def get_messages(message):
     elif msg_text.blog.flag_budget.get(message.chat.id):
         msg_text.base.category[message.chat.id] += '\nКакой у Вас рекламный бюджет: ' + message.text
         await send_msg(message, text_user=msg_text.blog.finish(), text_admin=msg_text.base.category[message.chat.id])
+    elif msg_text.admin.flag_for_password.get(message.chat.id):
+        if config.ADMIN_PASSWORD == message.text:
+            clear_flags(message)
+            markup = types.ReplyKeyboardMarkup()
+            markup.add(types.KeyboardButton(text='<< Назад'))
+            await bot.send_message(chat_id=message.chat.id, text=msg_text.admin.start(), reply_markup=markup)
+            msg_text.admin.flag_newsletter[message.chat.id] = True
+        else:
+            await send_msg(message, text_user=msg_text.admin.password_false())
     else:
         await send_msg(message=message, text_user=msg_text.base.unknown(), admins=())
 

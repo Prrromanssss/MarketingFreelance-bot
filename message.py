@@ -3,20 +3,35 @@ import abc
 
 class BaseMessages(abc.ABC):
     @abc.abstractmethod
-    def start(self):
+    def start(self, name=None):
         raise NotImplemented
 
 
 class RegularUser(BaseMessages):
-    def start(self):
+    def start(self, name=None):
         text = 'Добро пожаловать в электронного помощника компании ...\n' \
                'Давайте я помогу Вам в выборе услуги. '
         return text
 
 
 class AdminUser(BaseMessages):
-    def start(self):
-        text = ''
+    def __init__(self):
+        self.flag_for_password = {}
+        self.flag_newsletter = {}
+
+    def start(self, name=None):
+        text = f'Добро пожаловать, {name}. Вы вошли в аккаунт администратора\n' \
+               f'Вы можете создать рассылки для всех пользователей, присылая нам медиафайлы, текст и другие сообщения.\n' \
+               f'Как закончите, нажмите кнопка "<< Назад"'
+        return text
+
+    def write_password(self):
+        text = 'Введите пароль, чтобы войти в качестве админа\n' \
+               'Пароль: 0000'
+        return text
+
+    def password_false(self):
+        text = f'Пароль введен неверно, попробуйте еще раз'
         return text
 
 
@@ -50,7 +65,7 @@ class DevelopBots(BaseMessages):
     def __init__(self):
         self.flag_develop_bots = {}
 
-    def start(self):
+    def start(self, name=None):
         text = 'Расскажите какие задачи должен выполнять чат-бот и какой функционал Вам интересен'
         return text
 
@@ -66,7 +81,7 @@ class Bloggers(BaseMessages):
         self.flag_aim = {}
         self.flag_budget = {}
 
-    def start(self):
+    def start(self, name=None):
         text = 'Что Вы хотите рекламировать?'
         return text
 
@@ -92,7 +107,7 @@ class PromotionTelegram(BaseMessages):
         self.flag_prom_tg = {}
         self.category = {}
 
-    def start(self):
+    def start(self, name=None):
         text = 'Если вам нужно продвинуть ваши товары/услуги в telegram, то Вы обратились по адресу'
         return text
 
@@ -111,7 +126,7 @@ class Sites(BaseMessages):
         self.flag_sup_brief = {}
         self.send_doc = {}
 
-    def start(self):
+    def start(self, name=None):
         text = 'Вы уже знаете, какой сайт Вы хотите и готовы заполнить бриф для создания сайта' \
                ' или нужна помощь специалиста?'
         return text
@@ -135,7 +150,7 @@ class Design(BaseMessages):
         self.flag_sup_brief = {}
         self.send_doc = {}
 
-    def start(self):
+    def start(self, name=None):
         text = 'Вы уже знаете, какой дизайн Вы хотите и готовы заполнить бриф или нужна помощь специалиста?'
         return text
 
@@ -158,3 +173,4 @@ prom_tg = PromotionTelegram()
 site = Sites()
 design_obj = Design()
 base = Basement()
+admin = AdminUser()
