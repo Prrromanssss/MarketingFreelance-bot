@@ -122,7 +122,7 @@ async def develop_bots(callback):
 async def bloggers(callback):
     msg_text.base.category[callback.message.chat.id] = f'<strong>Реклама у блогеров</strong>'
     text = msg_text.blog.start()
-    msg_text.blog.flag_bloggers[callback.message.chat.id] = True
+    msg_text.blog.flag_for_bloggers[callback.message.chat.id] = True
     await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text)
 
 
