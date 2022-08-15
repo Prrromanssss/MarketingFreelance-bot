@@ -9,5 +9,5 @@ ADMINS = {
           'sourr_cream': 1921020697
          }
 
-DOCUMENT_SITE = 'documents/site_doc.docx'
-DOCUMENT_DESIGN = 'documents/site_doc.docx'
+SITE_HASH_FILE_ID = 'documents/site_doc.docx'
+DESIGN_HASH_FILE_ID = 'documents/site_doc.docx'

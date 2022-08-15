@@ -85,16 +85,20 @@ async def get_messages(message):
         text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
         await send_msg(message=message, text_user=msg_text.base.support_finish(), text_admin=text_admin)
     elif msg_text.blog.flag_for_bloggers.get(message.chat.id):
+        msg_text.base.category[message.chat.id] += '\nЧто Вы хотите рекламировать: ' + message.text
         await send_msg(message, text_user=msg_text.blog.network(), admins=())  #ToDo: create pol
         msg_text.blog.flag_network[message.chat.id] = True
     elif msg_text.blog.flag_network.get(message.chat.id):
+        msg_text.base.category[message.chat.id] += '\nВ какой социальной сети: ' + message.text
         await send_msg(message, text_user=msg_text.blog.aim(), admins=())
         msg_text.blog.flag_aim[message.chat.id] = True
     elif msg_text.blog.flag_aim.get(message.chat.id):
+        msg_text.base.category[message.chat.id] += '\nКто является вашей целевой аудиторией: ' + message.text
         await send_msg(message, text_user=msg_text.blog.budget(), admins=())
         msg_text.blog.flag_budget[message.chat.id] = True
     elif msg_text.blog.flag_budget.get(message.chat.id):
-        await send_msg(message, text_user=msg_text.blog.finish(), text_admin=message.text)
+        msg_text.base.category[message.chat.id] += '\nКакой у Вас рекламный бюджет: ' + message.text
+        await send_msg(message, text_user=msg_text.blog.finish(), text_admin=msg_text.base.category[message.chat.id])
     else:
         await send_msg(message=message, text_user=msg_text.base.unknown(), admins=())
 
@@ -207,6 +211,7 @@ async def design(callback):
 
 @bot.message_handler(content_types=['document'])
 async def get_docs(message):
+    print(message)
     if msg_text.site.flag_sites.get(message.chat.id) or msg_text.design_obj.flag_design.get(message.chat.id):
         msg_text.site.send_doc[message.chat.id] = True
         msg_text.design_obj.send_doc[message.chat.id] = True
