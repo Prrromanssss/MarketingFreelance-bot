@@ -84,7 +84,7 @@ async def get_messages(message):
     elif msg_text.design_obj.flag_sup_brief.get(message.chat.id) or msg_text.site.flag_sup_brief.get(message.chat.id):
         text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
         await send_msg(message=message, text_user=msg_text.base.support_finish(), text_admin=text_admin)
-    elif msg_text.blog.flag_bloggers.get(message.chat.id):
+    elif msg_text.blog.flag_for_bloggers.get(message.chat.id):
         await send_msg(message, text_user=msg_text.blog.network(), admins=())  #ToDo: create pol
         msg_text.blog.flag_network[message.chat.id] = True
     elif msg_text.blog.flag_network.get(message.chat.id):

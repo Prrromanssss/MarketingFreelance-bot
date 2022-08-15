@@ -61,7 +61,7 @@ class DevelopBots(BaseMessages):
 
 class Bloggers(BaseMessages):
     def __init__(self):
-        self.flag_bloggers = {}
+        self.flag_for_bloggers = {}
         self.flag_network = {}
         self.flag_aim = {}
         self.flag_budget = {}
