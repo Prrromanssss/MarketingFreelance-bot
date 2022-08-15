@@ -94,7 +94,7 @@ async def get_messages(message):
         await send_msg(message, text_user=msg_text.blog.budget(), admins=())
         msg_text.blog.flag_budget[message.chat.id] = True
     elif msg_text.blog.flag_budget.get(message.chat.id):
-        await send_msg(message, text_user=msg_text.blog.finish(), admins=())
+        await send_msg(message, text_user=msg_text.blog.finish(), text_admin=message.text)
     else:
         await send_msg(message=message, text_user=msg_text.base.unknown(), admins=())
 
