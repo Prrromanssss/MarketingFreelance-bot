@@ -28,9 +28,16 @@ def clear_flags(message, callback=False, not_delete=()):
                 pass
 
 
-async def send_msg(message, text_user, text_admin=None, admins=('sourr_cream', 'sourr_cream')):
+async def send_msg(message, text_user, text_admin=None, admins=('sourr_cream', 'sourr_cream'), is_markup=False):
     clear_flags(message)
-    await bot.send_message(chat_id=message.chat.id, text=text_user, parse_mode='html')
+    if is_markup:
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(types.KeyboardButton(text='О нас'))
+        markup.add(types.KeyboardButton(text='Услуги'))
+        markup.add(types.KeyboardButton(text='Поддержка'))
+        await bot.send_message(chat_id=message.chat.id, text=text_user, reply_markup=markup, parse_mode='html')
+    else:
+        await bot.send_message(chat_id=message.chat.id, text=text_user, parse_mode='html')
     text_admin = f'Юзернейм: @{models.db_object.db_select_user(message)}\n{text_admin}'
     for admin in admins:
         await bot.send_message(chat_id=config.ADMINS[admin], text=text_admin, parse_mode='html')
@@ -108,7 +115,7 @@ async def get_messages(message):
         msg_text.base.category[message.chat.id] += f'\n{message.text}'
     elif msg_text.dev_bots.flag_develop_bots.get(message.chat.id) and message.text == 'Всё':
         text_admin = msg_text.base.category.get(message.chat.id)
-        await send_msg(message=message, text_user=msg_text.dev_bots.finish(), text_admin=text_admin)
+        await send_msg(message=message, text_user=msg_text.dev_bots.finish(), text_admin=text_admin, is_markup=True)
     elif msg_text.prom_tg.flag_prom_tg.get(message.chat.id):
         text_admin = f'{msg_text.base.category.get(message.chat.id)}\n' \
                      f'<strong>{msg_text.prom_tg.category.get(message.chat.id)}</strong>\n{message.text}'
