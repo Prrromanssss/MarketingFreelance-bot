@@ -71,6 +71,10 @@ class Basement:
         text = 'Мы уже работаем над решением проблемы, ожидайте ответа.'
         return text
 
+    def payment(self):
+        text = 'Описание возможностей оплаты услуг'
+        return text
+
     def unknown(self):
         text = 'Мы вас не понимаем'
         return text

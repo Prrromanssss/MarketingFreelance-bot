@@ -3,6 +3,7 @@ import telebot.async_telebot
 import config
 import message as msg_text
 from telebot import types
+
 import models
 
 
@@ -34,6 +35,7 @@ async def send_msg(message, text_user, text_admin=None, admins=('sourr_cream', '
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(types.KeyboardButton(text='О нас'))
         markup.add(types.KeyboardButton(text='Услуги'))
+        markup.add(types.KeyboardButton(text='Оплатить услуги'))
         markup.add(types.KeyboardButton(text='Поддержка'))
         await bot.send_message(chat_id=message.chat.id, text=text_user, reply_markup=markup, parse_mode='html')
     else:
@@ -49,6 +51,7 @@ async def basic_commands(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add(types.KeyboardButton(text='О нас'))
     markup.add(types.KeyboardButton(text='Услуги'))
+    markup.add(types.KeyboardButton(text='Оплатить услуги'))
     markup.add(types.KeyboardButton(text='Поддержка'))
     text = msg_text.RegularUser().start()
     await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markup)
@@ -63,6 +66,7 @@ async def administration(message):
 
 @bot.message_handler(content_types=['text'])
 async def get_messages(message):
+    print(message)
     if msg_text.admin.flag_account.get(message.chat.id) and message.text == 'Рассылки сообщений':
         msg_text.admin.flag_for_newsletter[message.chat.id] = True
         text = msg_text.admin.newsletter()
@@ -91,6 +95,7 @@ async def get_messages(message):
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(types.KeyboardButton(text='О нас'))
         markup.add(types.KeyboardButton(text='Услуги'))
+        markup.add(types.KeyboardButton(text='Оплатить услуги'))
         markup.add(types.KeyboardButton(text='Поддержка'))
         await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markup)
         await services(message)
@@ -98,6 +103,13 @@ async def get_messages(message):
         users_id = models.db_object.db_select_all_users_id()
         for chat_id in users_id:
             await bot.forward_message(chat_id[0], message.chat.id, message.message_id)
+    elif message.text == 'Оплатить услуги':
+        clear_flags(message)
+        text = msg_text.base.payment()
+        await bot.send_message(chat_id=message.chat.id, text=text)
+        await bot.send_invoice(chat_id=message.chat.id, title='Оплата услуг', description='Тестовое описание товара',
+                               invoice_payload='payment_service', provider_token=config.YOO_TOKEN, currency='RUB',
+                               start_parameter='MarketingFreelance_bot', prices=[{'label': 'Руб', 'amount': 15000}])
     elif message.text == 'О нас':
         clear_flags(message)
         text = msg_text.base.about()
@@ -166,7 +178,7 @@ async def newsletter(message):
     if msg_text.admin.flag_for_newsletter.get(message.chat.id):
         users_id = models.db_object.db_select_all_users_id()
         for chat_id in users_id:
-           await bot.forward_message(chat_id[0], message.chat.id, message.message_id)
+            await bot.forward_message(chat_id[0], message.chat.id, message.message_id)
 
 
 async def services(message):
@@ -178,6 +190,11 @@ async def services(message):
     markup.add(types.InlineKeyboardButton(text='Создание сайтов', callback_data='sites'))
     markup.add(types.InlineKeyboardButton(text='Дизайн', callback_data='design'))
     await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markup)
+
+
+@bot.pre_checkout_query_handler()
+async def process_pre_checkout_query(pre_checkout_query):
+    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'develop_bots')
