@@ -192,7 +192,7 @@ async def services(message):
     await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markup)
 
 
-@bot.pre_checkout_query_handler()
+@bot.pre_checkout_query_handler(func=lambda query: True)
 async def process_pre_checkout_query(pre_checkout_query):
     await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
 
