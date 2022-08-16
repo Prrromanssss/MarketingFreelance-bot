@@ -197,6 +197,13 @@ async def process_pre_checkout_query(pre_checkout_query):
     await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
 
 
+@bot.message_handler(content_types=['successful_payment'])
+async def process_pay(message):
+    if message.successful_payment.invoice_payload == 'payment_service':
+        text = msg_text.base.success_pay()
+        await bot.send_message(chat_id=message.chat.id, text=text)
+
+
 @bot.callback_query_handler(func=lambda callback: callback.data == 'develop_bots')
 async def develop_bots(callback):
     msg_text.base.category[callback.message.chat.id] = f'<strong>Разработка чат-ботов</strong>'

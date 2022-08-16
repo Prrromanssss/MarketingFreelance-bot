@@ -75,6 +75,10 @@ class Basement:
         text = 'Описание возможностей оплаты услуг'
         return text
 
+    def success_pay(self):
+        text = 'Оплата прошла успешно!'
+        return text
+
     def unknown(self):
         text = 'Мы вас не понимаем'
         return text
