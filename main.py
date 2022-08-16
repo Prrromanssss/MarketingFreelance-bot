@@ -109,7 +109,7 @@ async def get_messages(message):
         await bot.send_invoice(chat_id=message.chat.id, title='Оплата услуг', description='Тестовое описание товара',
                                invoice_payload='payment_service', provider_token=config.YOO_TOKEN, currency='RUB',
                                start_parameter='MarketingFreelance_bot',
-                               prices=[types.LabeledPrice(label='Оплата услуг', amount='1000')])
+                               prices=[types.LabeledPrice(label='Оплата услуг', amount='100000')])
     elif message.text == 'О нас':
         clear_flags(message)
         text = msg_text.base.about()
