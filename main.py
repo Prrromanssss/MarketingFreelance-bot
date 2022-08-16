@@ -66,7 +66,6 @@ async def administration(message):
 
 @bot.message_handler(content_types=['text'])
 async def get_messages(message):
-    print(message)
     if msg_text.admin.flag_account.get(message.chat.id) and message.text == 'Рассылки сообщений':
         msg_text.admin.flag_for_newsletter[message.chat.id] = True
         text = msg_text.admin.newsletter()
@@ -109,7 +108,8 @@ async def get_messages(message):
         await bot.send_message(chat_id=message.chat.id, text=text)
         await bot.send_invoice(chat_id=message.chat.id, title='Оплата услуг', description='Тестовое описание товара',
                                invoice_payload='payment_service', provider_token=config.YOO_TOKEN, currency='RUB',
-                               start_parameter='MarketingFreelance_bot', prices=[{'label': 'Руб', 'amount': 15000}])
+                               start_parameter='MarketingFreelance_bot',
+                               prices=[types.LabeledPrice(label='Оплата услуг', amount='1000')])
     elif message.text == 'О нас':
         clear_flags(message)
         text = msg_text.base.about()
