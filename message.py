@@ -3,12 +3,12 @@ import abc
 
 class BaseMessages(abc.ABC):
     @abc.abstractmethod
-    def start(self, name=None):
+    def start(self):
         raise NotImplemented
 
 
 class RegularUser(BaseMessages):
-    def start(self, name=None):
+    def start(self):
         text = 'Добро пожаловать в электронного помощника компании ...\n' \
                'Давайте я помогу Вам в выборе услуги. '
         return text
@@ -20,8 +20,8 @@ class AdminUser(BaseMessages):
         self.flag_account = {}
         self.flag_for_newsletter = {}
 
-    def start(self, name=None):
-        text = f'Добро пожаловать, {name}. Вы вошли в аккаунт администратора\n' \
+    def start(self):
+        text = f'Вы вошли в аккаунт администратора\n' \
                f'Вы можете создать рассылки для всех пользователей, присылая нам медиафайлы, текст и другие сообщения.\n' \
                f'А также просмотреть всех ваших пользователей\n' \
                f'Нажмите кнопку "Стоп", если хотите прекратить рассылку'

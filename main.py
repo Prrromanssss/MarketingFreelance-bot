@@ -73,14 +73,24 @@ async def get_messages(message):
         await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markup)
     elif msg_text.admin.flag_account.get(message.chat.id) and message.text == 'Просмотр всех пользователей':
         usernames = models.db_object.db_select_all_users()
-        print(usernames)
-        await bot.send_message(chat_id=message.chat.id, text=usernames)
+        text = ''
+        for user in usernames:
+            text += f'<strong>Юзернейм:</strong> @{user[0]}\n'
+        await bot.send_message(chat_id=message.chat.id, text=text, parse_mode='html')
     elif msg_text.admin.flag_account.get(message.chat.id) and message.text == '<< Вернуться назад':
         del msg_text.admin.flag_account[message.chat.id]
         clear_flags(message)
+        text = msg_text.admin.finish()
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(types.KeyboardButton(text='О нас'))
+        markup.add(types.KeyboardButton(text='Услуги'))
+        markup.add(types.KeyboardButton(text='Поддержка'))
+        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markup)
         await services(message)
     elif msg_text.admin.flag_for_newsletter.get(message.chat.id):
-        ...
+        users_id = models.db_object.db_select_all_users_id()
+        for chat_id in users_id:
+            await bot.forward_message(chat_id, message.chat.id, message.message_id)
     elif message.text == 'О нас':
         clear_flags(message)
         text = msg_text.base.about()
@@ -94,9 +104,7 @@ async def get_messages(message):
         msg_text.base.flag_support[message.chat.id] = True
         text = msg_text.base.support_start()
         await bot.send_message(chat_id=message.chat.id, text=text)
-    # elif message.text == '<< Назад':
-    #     clear_flags(message)
-    #     await services(message)
+
     elif msg_text.dev_bots.flag_develop_bots.get(message.chat.id):
         text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
         await send_msg(message=message, text_user=msg_text.dev_bots.finish(), text_admin=text_admin)
@@ -136,18 +144,24 @@ async def get_messages(message):
             markup.add(types.KeyboardButton(text='Рассылки сообщений'))
             markup.add(types.KeyboardButton(text='Просмотр всех пользователей'))
             markup.add(types.KeyboardButton(text='<< Вернуться назад'))
+
             await bot.send_message(chat_id=message.chat.id, text=msg_text.admin.start(), reply_markup=markup)
             msg_text.admin.flag_account[message.chat.id] = True
         else:
-            await send_msg(message, text_user=msg_text.admin.password_false())
+            await send_msg(message, text_user=msg_text.admin.password_false(), admins=())
     else:
         await send_msg(message=message, text_user=msg_text.base.unknown(), admins=())
 
 
 @bot.message_handler(content_types=config.CONTENT_TYPES)
 async def newsletter(message):
+    if msg_text.admin.flag_for_newsletter.get(message.chat.id):
+        users_id = models.db_object.db_select_all_users_id()
+        for chat_id in users_id:
+           await bot.forward_message(chat_id, message.chat.id, message.message_id)
 
-    ...
+
+
 
 
 async def services(message):
@@ -232,7 +246,7 @@ async def brief(callback):
             document = config.DESIGN_HASH_FILE_ID
         await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text)
         await bot.send_document(chat_id=callback.message.chat.id, document=document)
-        #  ToDo: send word document to user
+
     elif callback.data.split('_')[-1] == '2':
         msg_text.site.flag_sup_brief[callback.message.chat.id] = True
         msg_text.design_obj.flag_sup_brief[callback.message.chat.id] = True
@@ -265,6 +279,10 @@ async def get_docs(message):
         await send_msg(message, text_user=text, text_admin=text_category)
         await bot.send_document(chat_id=config.ADMINS['sourr_cream'], document=message.document.file_id)  # qzark
         await bot.send_document(chat_id=config.ADMINS['sourr_cream'], document=message.document.file_id)  # decotto
+    elif msg_text.admin.flag_for_newsletter.get(message.chat.id):
+        users_id = models.db_object.db_select_all_users_id()
+        for chat_id in users_id:
+            await bot.forward_message(chat_id, message.chat.id, message.message_id)
     else:
         await send_msg(message=message, text_user=msg_text.base.unknown(), admins=())
     clear_flags(message)

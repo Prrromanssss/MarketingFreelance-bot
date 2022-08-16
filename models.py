@@ -40,5 +40,14 @@ class UserData:
         conn.commit()
         return usernames
 
+    def db_select_all_users_id(self):
+        conn = psycopg2.connect(self.name, sslmode='require')
+        cursor = conn.cursor()
+        sql_query = f'SELECT "user_id" FROM {config.DB_TABLE}'
+        cursor.execute(sql_query)
+        users_id = cursor.fetchall()
+        conn.commit()
+        return users_id
+
 
 db_object = UserData(config.DB_URI)
