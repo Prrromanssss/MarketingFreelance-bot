@@ -159,7 +159,7 @@ async def newsletter(message):
     if msg_text.admin.flag_for_newsletter.get(message.chat.id):
         users_id = models.db_object.db_select_all_users_id()
         for chat_id in users_id:
-           await bot.forward_message(chat_id, message.chat.id, message.message_id)
+           await bot.forward_message(chat_id[0], message.chat.id, message.message_id)
 
 
 
@@ -283,7 +283,7 @@ async def get_docs(message):
     elif msg_text.admin.flag_for_newsletter.get(message.chat.id):
         users_id = models.db_object.db_select_all_users_id()
         for chat_id in users_id:
-            await bot.forward_message(chat_id, message.chat.id, message.message_id)
+            await bot.forward_message(chat_id[0], message.chat.id, message.message_id)
     else:
         await send_msg(message=message, text_user=msg_text.base.unknown(), admins=())
     clear_flags(message)
