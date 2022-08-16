@@ -81,7 +81,8 @@ class DevelopBots(BaseMessages):
         self.flag_develop_bots = {}
 
     def start(self, name=None):
-        text = 'Расскажите какие задачи должен выполнять чат-бот и какой функционал Вам интересен'
+        text = 'Расскажите какие задачи должен выполнять чат-бот и какой функционал Вам интересен\n' \
+               'Как закончите свое описание нажмите кнопку "Всё"'
         return text
 
     def finish(self):

@@ -90,7 +90,6 @@ async def get_messages(message):
     elif msg_text.admin.flag_for_newsletter.get(message.chat.id):
         users_id = models.db_object.db_select_all_users_id()
         for chat_id in users_id:
-            print(chat_id)
             await bot.forward_message(chat_id[0], message.chat.id, message.message_id)
     elif message.text == 'О нас':
         clear_flags(message)
@@ -105,9 +104,10 @@ async def get_messages(message):
         msg_text.base.flag_support[message.chat.id] = True
         text = msg_text.base.support_start()
         await bot.send_message(chat_id=message.chat.id, text=text)
-
-    elif msg_text.dev_bots.flag_develop_bots.get(message.chat.id):
-        text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
+    elif msg_text.dev_bots.flag_develop_bots.get(message.chat.id) and message.text != 'Всё':
+        msg_text.base.category[message.chat.id] += f'\n{message.text}'
+    elif msg_text.dev_bots.flag_develop_bots.get(message.chat.id) and message.text == 'Всё':
+        text_admin = msg_text.base.category.get(message.chat.id)
         await send_msg(message=message, text_user=msg_text.dev_bots.finish(), text_admin=text_admin)
     elif msg_text.prom_tg.flag_prom_tg.get(message.chat.id):
         text_admin = f'{msg_text.base.category.get(message.chat.id)}\n' \
@@ -162,9 +162,6 @@ async def newsletter(message):
            await bot.forward_message(chat_id[0], message.chat.id, message.message_id)
 
 
-
-
-
 async def services(message):
     text = msg_text.base.services()
     markup = types.InlineKeyboardMarkup()
@@ -181,7 +178,10 @@ async def develop_bots(callback):
     msg_text.base.category[callback.message.chat.id] = f'<strong>Разработка чат-ботов</strong>'
     text = msg_text.dev_bots.start()
     msg_text.dev_bots.flag_develop_bots[callback.message.chat.id] = True
-    await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.add(types.KeyboardButton(text='Всё'))
+    await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
+                                text=text, reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'bloggers')
