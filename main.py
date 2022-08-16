@@ -90,7 +90,8 @@ async def get_messages(message):
     elif msg_text.admin.flag_for_newsletter.get(message.chat.id):
         users_id = models.db_object.db_select_all_users_id()
         for chat_id in users_id:
-            await bot.forward_message(chat_id, message.chat.id, message.message_id)
+            print(chat_id)
+            await bot.forward_message(int(chat_id), message.chat.id, message.message_id)
     elif message.text == 'О нас':
         clear_flags(message)
         text = msg_text.base.about()
