@@ -18,7 +18,7 @@ def clear_flags(message, callback=False, not_delete=()):
              'msg_text.design_obj.flag_design', 'msg_text.site.flag_sup_brief',
              'msg_text.design_obj.flag_sup_brief', 'msg_text.design_obj.send_doc', 'msg_text.site.send_doc',
              'msg_text.blog.flag_for_bloggers', 'msg_text.blog.flag_network', 'msg_text.blog.flag_aim',
-             'msg_text.blog.flag_budget', 'msg_text.admin.flag_for_password', 'msg_text.admin.flag_newsletter'
+             'msg_text.blog.flag_budget', 'msg_text.admin.flag_for_password',
              )
     for flag in flags:
         if flag not in not_delete:
@@ -56,7 +56,32 @@ async def administration(message):
 
 @bot.message_handler(content_types=['text'])
 async def get_messages(message):
-    if message.text == 'О нас':
+    if msg_text.admin.flag_account.get(message.chat.id) and message.text == 'Рассылки сообщений':
+        msg_text.admin.flag_for_newsletter[message.chat.id] = True
+        text = msg_text.admin.newsletter()
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(types.KeyboardButton(text='Стоп'))
+        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markup)
+    elif (msg_text.admin.flag_account.get(message.chat.id) and msg_text.admin.flag_for_newsletter.get(message.chat.id)
+            and message.text == 'Стоп'):
+        del msg_text.admin.flag_for_newsletter[message.chat.id]
+        text = msg_text.admin.success_newsletter()
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(types.KeyboardButton(text='Рассылки сообщений'))
+        markup.add(types.KeyboardButton(text='Просмотр всех пользователей'))
+        markup.add(types.KeyboardButton(text='<< Вернуться назад'))
+        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markup)
+    elif msg_text.admin.flag_account.get(message.chat.id) and message.text == 'Просмотр всех пользователей':
+        usernames = models.db_object.db_select_all_users()
+        print(usernames)
+        await bot.send_message(chat_id=message.chat.id, text=usernames)
+    elif msg_text.admin.flag_account.get(message.chat.id) and message.text == '<< Вернуться назад':
+        del msg_text.admin.flag_account[message.chat.id]
+        clear_flags(message)
+        await services(message)
+    elif msg_text.admin.flag_for_newsletter.get(message.chat.id):
+        ...
+    elif message.text == 'О нас':
         clear_flags(message)
         text = msg_text.base.about()
         await bot.send_message(chat_id=message.chat.id, text=text)
@@ -69,9 +94,9 @@ async def get_messages(message):
         msg_text.base.flag_support[message.chat.id] = True
         text = msg_text.base.support_start()
         await bot.send_message(chat_id=message.chat.id, text=text)
-    elif message.text == '<< Назад':
-        clear_flags(message)
-        await services(message)
+    # elif message.text == '<< Назад':
+    #     clear_flags(message)
+    #     await services(message)
     elif msg_text.dev_bots.flag_develop_bots.get(message.chat.id):
         text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
         await send_msg(message=message, text_user=msg_text.dev_bots.finish(), text_admin=text_admin)
@@ -91,7 +116,7 @@ async def get_messages(message):
         await send_msg(message=message, text_user=msg_text.base.support_finish(), text_admin=text_admin)
     elif msg_text.blog.flag_for_bloggers.get(message.chat.id):
         msg_text.base.category[message.chat.id] += '\nЧто Вы хотите рекламировать: ' + message.text
-        await send_msg(message, text_user=msg_text.blog.network(), admins=())  #ToDo: create pol
+        await send_msg(message, text_user=msg_text.blog.network(), admins=())
         msg_text.blog.flag_network[message.chat.id] = True
     elif msg_text.blog.flag_network.get(message.chat.id):
         msg_text.base.category[message.chat.id] += '\nВ какой социальной сети: ' + message.text
@@ -107,14 +132,22 @@ async def get_messages(message):
     elif msg_text.admin.flag_for_password.get(message.chat.id):
         if config.ADMIN_PASSWORD == message.text:
             clear_flags(message)
-            markup = types.ReplyKeyboardMarkup()
-            markup.add(types.KeyboardButton(text='<< Назад'))
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            markup.add(types.KeyboardButton(text='Рассылки сообщений'))
+            markup.add(types.KeyboardButton(text='Просмотр всех пользователей'))
+            markup.add(types.KeyboardButton(text='<< Вернуться назад'))
             await bot.send_message(chat_id=message.chat.id, text=msg_text.admin.start(), reply_markup=markup)
-            msg_text.admin.flag_newsletter[message.chat.id] = True
+            msg_text.admin.flag_account[message.chat.id] = True
         else:
             await send_msg(message, text_user=msg_text.admin.password_false())
     else:
         await send_msg(message=message, text_user=msg_text.base.unknown(), admins=())
+
+
+@bot.message_handler(content_types=config.CONTENT_TYPES)
+async def newsletter(message):
+
+    ...
 
 
 async def services(message):

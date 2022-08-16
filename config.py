@@ -9,5 +9,8 @@ ADMINS = {
           'sourr_cream': 1921020697
          }
 ADMIN_PASSWORD = '0000'
+CONTENT_TYPES = ['text', 'audio', 'document', 'photo',
+                 'sticker', 'video', 'video_note', 'voice',
+                 'location', 'contact', 'venue']
 SITE_HASH_FILE_ID = 'BQACAgIAAxkBAAIBfWL6Z-0vfBfyk0pv2XZRYANlDdEyAAKiHwACo6vRSytcVw1R6HGoKQQ'
 DESIGN_HASH_FILE_ID = 'BQACAgIAAxkBAAIBfWL6Z-0vfBfyk0pv2XZRYANlDdEyAAKiHwACo6vRSytcVw1R6HGoKQQ'

@@ -17,12 +17,14 @@ class RegularUser(BaseMessages):
 class AdminUser(BaseMessages):
     def __init__(self):
         self.flag_for_password = {}
-        self.flag_newsletter = {}
+        self.flag_account = {}
+        self.flag_for_newsletter = {}
 
     def start(self, name=None):
         text = f'Добро пожаловать, {name}. Вы вошли в аккаунт администратора\n' \
                f'Вы можете создать рассылки для всех пользователей, присылая нам медиафайлы, текст и другие сообщения.\n' \
-               f'Как закончите, нажмите кнопка "<< Назад"'
+               f'А также просмотреть всех ваших пользователей\n' \
+               f'Нажмите кнопку "Стоп", если хотите прекратить рассылку'
         return text
 
     def write_password(self):
@@ -30,8 +32,20 @@ class AdminUser(BaseMessages):
                'Пароль: 0000'
         return text
 
+    def newsletter(self):
+        text = 'Присылайе нам медиафайлы, документы и другие сообщения и они будут отправлены всем пользователям'
+        return text
+
+    def success_newsletter(self):
+        text = 'Ваши сообщения успешно отправлены всем пользователям!'
+        return text
+
     def password_false(self):
         text = f'Пароль введен неверно, попробуйте еще раз'
+        return text
+
+    def finish(self):
+        text = 'Вы вернулись в аккаунт обычного пользователя'
         return text
 
 
