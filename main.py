@@ -180,7 +180,8 @@ async def develop_bots(callback):
     msg_text.dev_bots.flag_develop_bots[callback.message.chat.id] = True
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add(types.KeyboardButton(text='Всё'))
-    await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
+    await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
+    await bot.send_message(chat_id=callback.message.chat.id,
                                 text=text, reply_markup=markup)
 
 
