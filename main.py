@@ -29,7 +29,7 @@ def clear_flags(message, callback=False, not_delete=()):
                 pass
 
 
-async def send_msg(message, text_user, text_admin=None, admins=('sourr_cream', 'sourr_cream'), is_markup=False):
+async def send_msg(message, text_user, text_admin=None, admins=('zakazy', 'qzark'), is_markup=False):
     clear_flags(message)
     if is_markup:
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
