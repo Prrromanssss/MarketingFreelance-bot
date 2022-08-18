@@ -5,7 +5,7 @@ from telebot import types
 
 
 '''clean_markup'''
-clean_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+clean_markup = types.ReplyKeyboardRemove()
 
 '''main markup'''
 main_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -15,7 +15,7 @@ main_markup.add(types.KeyboardButton(text='Оплата услуг'))
 main_markup.add(types.KeyboardButton(text='Поддержка'))
 
 '''continue markup'''
-continue_markup = main_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+continue_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 continue_markup.add(types.KeyboardButton(text='Далее'))
 
 '''admin markup'''

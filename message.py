@@ -7,6 +7,12 @@ class BaseMessages(abc.ABC):
         raise NotImplemented
 
 
+class Finish:
+    def finish(self):
+        text = 'Наш менеджер скоро свяжется с Вами'
+        return text
+
+
 class RegularUser(BaseMessages):
     def start(self):
         text = 'Добро пожаловать в электронного помощника компании ...\n' \
@@ -85,7 +91,7 @@ class Basement:
         return text
 
 
-class DevelopBots(BaseMessages):
+class DevelopBots(BaseMessages, Finish):
     def __init__(self):
         self.flag_develop_bots = {}
 
@@ -94,12 +100,8 @@ class DevelopBots(BaseMessages):
                'После заполнения нажмите кнопку «Далее»'
         return text
 
-    def finish(self):
-        text = 'Наш менеджер скоро свяжется с Вами'
-        return text
 
-
-class Bloggers(BaseMessages):
+class Bloggers(BaseMessages, Finish):
     def __init__(self):
         self.flag_for_bloggers = {}
         self.flag_network = {}
@@ -117,7 +119,7 @@ class Bloggers(BaseMessages):
         return text
 
     def aim(self):
-        text = 'Кто является вашей целевой аудиторией? Опишите портрет клиента' \
+        text = 'Кто является вашей целевой аудиторией? Опишите портрет клиента\n' \
                'После заполнения нажмите кнопку «Далее»'
         return text
 
@@ -130,17 +132,20 @@ class Bloggers(BaseMessages):
         return text
 
 
-class PromotionTelegram(BaseMessages):
+class PromotionTelegram(BaseMessages, Finish):
     def __init__(self):
         self.flag_prom_tg = {}
         self.category = {}
+        self.msg_for_delete = {}
+        self.all_categories = {
+                  '1': 'Рассылки в Telegram', '2': 'Парсинг подписчиков',
+                  '3': 'Инвайт в группы', '4': 'PR компании',
+                  '5': 'Циклические публикации в чатах', '6': 'Посев нативных комментариев',
+                  '7': 'Комплексное продвижение'
+                 }
 
-    def start(self, name=None):
+    def start(self):
         text = 'Если вам нужно продвинуть ваши товары/услуги в telegram, то Вы обратились по адресу'
-        return text
-
-    def prom_tg_markup(self):
-        text = 'Опишите ваши задачи, пришлите ссылку на ваш канал/группу или сайт и оставьте ваши контакты'
         return text
 
     def finish(self):
@@ -148,11 +153,65 @@ class PromotionTelegram(BaseMessages):
         return text
 
 
-class ListPromotionTelegram:
-    ...
+class ListPromotionTelegramNewsletter(BaseMessages):
+    def start(self):
+        text = 'У вас уже есть текст и креатив для рассылки?'
+        return text
+
+    def press_yes(self):
+        text = 'Пришлите текст, креатив и ссылку на ваш канал/группу/сайт\n' \
+                'После заполнения нажмите кнопку «Далее»'
+        return text
+
+    def success_payment(self):
+        text = 'Спасибо за заказ.Наш менеджер свяжется с вами'
+        return text
+
+    def press_no(self):
+        text = 'Наш менеджер скоро свяжется с Вами'
+        return text
 
 
-class Sites(BaseMessages):
+class ListPromotionTelegramInvite(BaseMessages, Finish):
+    def start(self):
+        text = 'С помощью данной услуги вы сможете собрать и подписать на свою группу подписчиков интересующих вас чатов'
+        return text
+
+    def press_yes(self):
+        text = 'Отправьте ссылки на чаты, подписчики которых Вам интересны\n' \
+               'После заполнения нажмите кнопку «Далее»'
+        return text
+
+
+class ListPromotionTelegramParsing(BaseMessages, Finish):
+    def start(self):
+        text = 'Пришлите ссылки на чаты/каналы подписчиков которых, вы хотите спарсить\n' \
+               'После заполнения нажмите кнопку «Далее»'
+        return text
+
+
+class ListPromotionTelegramPR(BaseMessages, Finish):
+    def start(self):
+        text = 'С помощью нашего сервиса можно провести PR-компании в социальных сетях.\nОпишите ваши задачи\n' \
+               'После заполнения нажмите кнопку «Далее»'
+        return text
+
+
+class ListPromotionTelegramCycle(BaseMessages, Finish):
+    def start(self):
+        text = 'С помощью нашего сервиса у вас есть возможность публиковать ваши сообщения в интересующих вас группах' \
+               ' по заданному временному периоду, раз в 1час/2 часа и тд'
+        return text
+
+
+class ListPromotionTelegramComments(BaseMessages, Finish):
+    def start(self):
+        text = 'При заказе данной услуги, в нужных Вам чатах, размещаются сообщения содержащие нативную рекламу' \
+               ' ваших товаров/услуг'
+        return text
+
+
+class Sites(BaseMessages, Finish):
     def __init__(self):
         self.flag_sites = {}
         self.flag_sup_brief = {}
@@ -171,12 +230,8 @@ class Sites(BaseMessages):
         text = 'Укажите ваши контактные данные и удобное время для связи'
         return text
 
-    def finish(self):
-        text = 'Наш менеджер скоро свяжется с Вами'
-        return text
 
-
-class Design(BaseMessages):
+class Design(BaseMessages, Finish):
     def __init__(self):
         self.flag_design = {}
         self.flag_sup_brief = {}
@@ -194,10 +249,6 @@ class Design(BaseMessages):
         text = 'Укажите ваши контактные данные и удобное время для связи'
         return text
 
-    def finish(self):
-        text = 'Наш менеджер скоро свяжется с Вами'
-        return text
-
 
 dev_bots = DevelopBots()
 blog = Bloggers()
@@ -206,3 +257,4 @@ site = Sites()
 design_obj = Design()
 base = Basement()
 admin = AdminUser()
+reg_user = RegularUser()
