@@ -134,9 +134,8 @@ class Bloggers(BaseMessages, Finish):
 
 class PromotionTelegram(BaseMessages, Finish):
     def __init__(self):
-        self.flag_prom_tg = {}
-        self.category = {}
-        self.msg_for_delete = {}
+        self.flag_prom_tg, self.newsletter, self.number_newsletter = {}, {}, {}
+        self.category, self.msg_for_delete = {}, {}
         self.all_categories = {
                   '1': 'Рассылки в Telegram', '2': 'Парсинг подписчиков',
                   '3': 'Инвайт в группы', '4': 'PR компании',
@@ -153,7 +152,7 @@ class PromotionTelegram(BaseMessages, Finish):
         return text
 
 
-class ListPromotionTelegramNewsletter(BaseMessages):
+class ListPromotionTelegramNewsletter(BaseMessages, Finish):
     def start(self):
         text = 'У вас уже есть текст и креатив для рассылки?'
         return text
@@ -163,12 +162,13 @@ class ListPromotionTelegramNewsletter(BaseMessages):
                 'После заполнения нажмите кнопку «Далее»'
         return text
 
-    def success_payment(self):
-        text = 'Спасибо за заказ.Наш менеджер свяжется с вами'
+    def number(self):
+        text = 'Какое количество сообщений Вам нужно отправить'
         return text
 
-    def press_no(self):
-        text = 'Наш менеджер скоро свяжется с Вами'
+
+    def success_payment(self):
+        text = 'Спасибо за заказ.\nНаш менеджер свяжется с вами'
         return text
 
 

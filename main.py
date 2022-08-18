@@ -23,7 +23,7 @@ def clear_flags(message, callback=False, not_delete=()):
              'msg_text.design_obj.flag_sup_brief', 'msg_text.design_obj.send_doc', 'msg_text.site.send_doc',
              'msg_text.blog.flag_for_bloggers', 'msg_text.blog.flag_detail_product', 'msg_text.blog.flag_aim',
              'msg_text.blog.flag_budget', 'msg_text.admin.flag_for_password', 'msg_text.prom_tg.msg_for_delete',
-             'msg_text.prom_tg.flag_prom_tg'
+             'msg_text.prom_tg.flag_prom_tg', 'msg_text.prom_tg.newsletter', 'msg_text.prom_tg.number_newsletter',
              )
     for flag in flags:
         if flag not in not_delete:
@@ -234,6 +234,14 @@ async def get_messages(message):
             await send_msg(message, text_user=msg_text.ListPromotionTelegramInvite().finish(),
                            text_admin=text_admin, markup=markups.main_markup)
 
+    # Newsletter in Telegram
+    elif msg_text.prom_tg.newsletter.get(message.chat.id):
+        if message.text != 'Далее':
+            msg_text.base.category[message.chat.id] += f'\n{message.text}'
+        else:
+            text = msg_text.ListPromotionTelegramNewsletter().number()
+            await send_msg(message, text_user=text, admins=(), markup=markups.prom_tg_newsletter_number_markup)
+
     # ------------------------------------------------------------------------
     #   Service of creating sites and design (they have the same functional)
     # ------------------------------------------------------------------------
@@ -281,9 +289,10 @@ async def newsletter(message):
 
 @bot.message_handler(content_types=['successful_payment'])
 async def process_pay(message):
-    if message.successful_payment.invoice_payload == 'payment_service':
-        text = msg_text.base.success_pay()
-        await bot.send_message(chat_id=message.chat.id, text=text)
+    if message.successful_payment.invoice_payload == 'payment_prom_tg_newsletters':
+        text_user = msg_text.ListPromotionTelegramNewsletter().success_payment()
+        text_admin = msg_text.base.category.get(message.chat.id) + '\n' + '<strong>Оплата</strong>: успешно'
+        await send_msg(message, text_user=text_user, text_admin=text_admin)
 
 
 @bot.message_handler(content_types=['document'])
@@ -348,7 +357,62 @@ async def prom_telegram(callback):
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_1')
 async def prom_tg_newsletter(callback):
     text = msg_text.ListPromotionTelegramNewsletter().start()
-    await general_prom_tg(callback, text_start=text, markup=markups.prom_tg_newsletter_markup)  # ToDo: prom_tg_1 - newsletter
+    await general_prom_tg(callback, text_start=text, markup=markups.prom_tg_newsletter_markup)
+
+
+@bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_1_want')
+async def prom_tg_newsletter_want(callback):
+    await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
+    msg_text.prom_tg.newsletter[callback.message.chat.id] = True
+    text = msg_text.ListPromotionTelegramNewsletter().press_yes()
+    await bot.send_message(chat_id=callback.message.chat.id, text=text,
+                           reply_markup=markups.back_continue_markup)
+
+
+
+@bot.callback_query_handler(func=lambda callback: 'prom_tg_1_number' in callback.data)
+async def prom_tg_newsletter_number(callback):
+    numbers = {'1': '1000', '2': '2000', '3': '3000', '4': '5000', '5': '10000'}
+    if callback.data.split('_')[-1] == '6' and 'inp' not in callback.data:
+        text = msg_text.ListPromotionTelegramNewsletter().number() + '\n' + 'Количество: '
+
+        await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text,
+                                    reply_markup=markups.prom_tg_newsletter_inp_number_markup)
+    elif 'inp' in callback.data:
+        msg_text.prom_tg.number_newsletter[callback.message.chat.id] = msg_text.prom_tg.number_newsletter.get(callback.message.chat.id, '')\
+                                                           + callback.data.split('_')[-1]
+        text = msg_text.ListPromotionTelegramNewsletter().number() + '\n' + 'Количество: '\
+                                                                   + msg_text.prom_tg.number_newsletter[callback.message.chat.id]
+        await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text,
+                                    reply_markup=markups.prom_tg_newsletter_inp_last_number_markup)
+    elif 'last' in callback.data:
+        await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
+        await calculate_payment(callback.message, msg_text.prom_tg.number_newsletter[callback.message.chat.id])
+    else:
+        await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
+        await calculate_payment(callback.message, numbers[callback.data.split('_')[-1]])
+
+
+async def calculate_payment(message, number):
+    if int(number) < 5000:
+        number = str(int(int(number) * 2.5))
+    elif 5000 <= int(number) < 10000:
+        number = str(int(number) * 2)
+    elif int(number) >= 10000:
+        number = str(int(int(number) * 1.5))
+    print(number)
+    await bot.send_invoice(chat_id=message.chat.id, title='Оплата рассылок',
+                           description='Тестовое описание товара', invoice_payload='payment_prom_tg_newsletters',
+                           provider_token=config.YOO_TOKEN, currency='RUB', start_parameter='MarketingFreelance_bot',
+                           prices=[types.LabeledPrice(label='Оплата рассылок', amount=f'{number}00')])
+
+
+@bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_1_sup')
+async def prom_tg_newsletter_support(callback):
+    await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
+    msg_text.base.category[callback.message.chat.id] += f'\nНужна ваша помощь'
+    text = msg_text.ListPromotionTelegramNewsletter().finish()
+    await send_msg(callback.message, text_user=text, text_admin=msg_text.base.category[callback.message.chat.id])
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_2')
@@ -404,7 +468,6 @@ async def prom_tg_cycle_comments_want(callback):
     await send_msg(callback.message, text_user=text, text_admin=text_admin)
 
 
-
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_7')
 async def prom_tg_complex(callback):
     text = msg_text.ListPromotionTelegramComplex().start()
@@ -413,7 +476,7 @@ async def prom_tg_complex(callback):
 
 async def general_prom_tg(callback, text_start, markup=None):
     msg_text.prom_tg.category[callback.message.chat.id] = msg_text.prom_tg.all_categories[callback.data.split('_')[-1]]
-    msg_text.prom_tg.flag_prom_tg[callback.message.chat.id] = True
+
     await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
     if markup:
         msg = await bot.send_message(chat_id=callback.message.chat.id, text=text_start,
@@ -464,11 +527,6 @@ async def design(callback):
 async def back_to_services(callback):
     await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
     await services(callback.message)
-
-    # await bot.send_invoice(chat_id=callback.message.chat.id, title='Оплата услуг',
-    #                        description='Тестовое описание товара', invoice_payload='payment_service',
-    #                        provider_token=config.YOO_TOKEN, currency='RUB', start_parameter='MarketingFreelance_bot',
-    #                        prices=[types.LabeledPrice(label='Оплата услуг', amount='100000')])
 
 
 async def main():
