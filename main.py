@@ -3,7 +3,7 @@ import telebot.async_telebot
 import config
 import message as msg_text
 from telebot import types
-
+import markups
 import models
 
 
@@ -29,14 +29,9 @@ def clear_flags(message, callback=False, not_delete=()):
                 pass
 
 
-async def send_msg(message, text_user, text_admin=None, admins=('zakazy', 'qzark'), is_markup=False):
+async def send_msg(message, text_user, text_admin=None, admins=('sourr_cream', 'sourr_cream'), markup=None):
     clear_flags(message)
-    if is_markup:
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        markup.add(types.KeyboardButton(text='О нас'))
-        markup.add(types.KeyboardButton(text='Услуги'))
-        markup.add(types.KeyboardButton(text='Оплатить услуги'))
-        markup.add(types.KeyboardButton(text='Поддержка'))
+    if markup:
         await bot.send_message(chat_id=message.chat.id, text=text_user, reply_markup=markup, parse_mode='html')
     else:
         await bot.send_message(chat_id=message.chat.id, text=text_user, parse_mode='html')
@@ -48,13 +43,8 @@ async def send_msg(message, text_user, text_admin=None, admins=('zakazy', 'qzark
 @bot.message_handler(commands=['start'])
 async def basic_commands(message):
     models.db_object.db_insert(message)
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add(types.KeyboardButton(text='О нас'))
-    markup.add(types.KeyboardButton(text='Услуги'))
-    markup.add(types.KeyboardButton(text='Оплатить услуги'))
-    markup.add(types.KeyboardButton(text='Поддержка'))
     text = msg_text.RegularUser().start()
-    await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markup)
+    await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.main_markup)
     await services(message)
 
 
@@ -76,11 +66,8 @@ async def get_messages(message):
             and message.text == 'Стоп'):
         del msg_text.admin.flag_for_newsletter[message.chat.id]
         text = msg_text.admin.success_newsletter()
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        markup.add(types.KeyboardButton(text='Рассылки сообщений'))
-        markup.add(types.KeyboardButton(text='Просмотр всех пользователей'))
-        markup.add(types.KeyboardButton(text='<< Вернуться назад'))
-        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markup)
+
+        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.admin_markup)
     elif msg_text.admin.flag_account.get(message.chat.id) and message.text == 'Просмотр всех пользователей':
         usernames = models.db_object.db_select_all_users()
         text = ''
@@ -91,25 +78,17 @@ async def get_messages(message):
         del msg_text.admin.flag_account[message.chat.id]
         clear_flags(message)
         text = msg_text.admin.finish()
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        markup.add(types.KeyboardButton(text='О нас'))
-        markup.add(types.KeyboardButton(text='Услуги'))
-        markup.add(types.KeyboardButton(text='Оплатить услуги'))
-        markup.add(types.KeyboardButton(text='Поддержка'))
-        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markup)
+        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.main_markup)
         await services(message)
     elif msg_text.admin.flag_for_newsletter.get(message.chat.id):
         users_id = models.db_object.db_select_all_users_id()
         for chat_id in users_id:
             await bot.forward_message(chat_id[0], message.chat.id, message.message_id)
-    elif message.text == 'Оплатить услуги':
+    elif message.text == 'Оплата услуг':
         clear_flags(message)
         text = msg_text.base.payment()
-        await bot.send_message(chat_id=message.chat.id, text=text)
-        await bot.send_invoice(chat_id=message.chat.id, title='Оплата услуг', description='Тестовое описание товара',
-                               invoice_payload='payment_service', provider_token=config.YOO_TOKEN, currency='RUB',
-                               start_parameter='MarketingFreelance_bot',
-                               prices=[types.LabeledPrice(label='Оплата услуг', amount='100000')])
+        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.pay_service_markup)
+
     elif message.text == 'О нас':
         clear_flags(message)
         text = msg_text.base.about()
@@ -122,20 +101,29 @@ async def get_messages(message):
         clear_flags(message, not_delete=('msg_text.base.flag_support',))
         msg_text.base.flag_support[message.chat.id] = True
         text = msg_text.base.support_start()
-        await bot.send_message(chat_id=message.chat.id, text=text)
-    elif msg_text.dev_bots.flag_develop_bots.get(message.chat.id) and message.text != 'Всё':
+        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.continue_markup)
+    elif message.text == '<< Назад':
+        text = msg_text.prom_tg.start()
+        await bot.edit_message_text(chat_id=message.chat.id, message_id=message.id, text=text,
+                                    reply_markup=markups.prom_tg_markup)
+    elif msg_text.dev_bots.flag_develop_bots.get(message.chat.id) and message.text != 'Далее':
         msg_text.base.category[message.chat.id] += f'\n{message.text}'
-    elif msg_text.dev_bots.flag_develop_bots.get(message.chat.id) and message.text == 'Всё':
+    elif msg_text.dev_bots.flag_develop_bots.get(message.chat.id) and message.text == 'Далее':
         text_admin = msg_text.base.category.get(message.chat.id)
-        await send_msg(message=message, text_user=msg_text.dev_bots.finish(), text_admin=text_admin, is_markup=True)
+        await send_msg(message=message, text_user=msg_text.dev_bots.finish(), text_admin=text_admin,
+                       markup=markups.main_markup)
     elif msg_text.prom_tg.flag_prom_tg.get(message.chat.id):
         text_admin = f'{msg_text.base.category.get(message.chat.id)}\n' \
                      f'<strong>{msg_text.prom_tg.category.get(message.chat.id)}</strong>\n{message.text}'
         await send_msg(message=message, text_user=msg_text.prom_tg.finish(), admins=('sourr_cream',),  # qzark
                        text_admin=text_admin)
-    elif msg_text.base.flag_support.get(message.chat.id):
-        text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
-        await send_msg(message=message, text_user=msg_text.base.support_finish(), text_admin=text_admin)
+    elif msg_text.base.flag_support.get(message.chat.id) and message.text != 'Далее':
+        msg_text.base.category[message.chat.id] = msg_text.base.category.get(message.chat.id) + '\n' + message.text
+
+    elif msg_text.base.flag_support.get(message.chat.id) and message.text == 'Далее':
+        text_admin = msg_text.base.category[message.chat.id]
+        await send_msg(message=message, text_user=msg_text.base.support_finish(),
+                       text_admin=text_admin, markup=markups.clean_markup)
     elif msg_text.site.send_doc.get(message.chat.id) or msg_text.design_obj.send_doc.get(message.chat.id):
         text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
         await send_msg(message=message, text_user=msg_text.dev_bots.finish(), text_admin=text_admin)
@@ -146,26 +134,35 @@ async def get_messages(message):
         msg_text.base.category[message.chat.id] += '\nЧто Вы хотите рекламировать: ' + message.text
         await send_msg(message, text_user=msg_text.blog.network(), admins=())
         msg_text.blog.flag_network[message.chat.id] = True
-    elif msg_text.blog.flag_network.get(message.chat.id):
-        msg_text.base.category[message.chat.id] += '\nВ какой социальной сети: ' + message.text
+    elif msg_text.blog.flag_network.get(message.chat.id) and message.text != 'Далее':
+        if 'Расскажите подробнее, о вашем товаре/услуге?:' in msg_text.base.category[message.chat.id]:
+            msg_text.base.category[message.chat.id] += message.text
+        else:
+            msg_text.base.category[message.chat.id] += '\nРасскажите подробнее, о вашем товаре/услуге?: '\
+                                                       + message.text
+    elif msg_text.blog.flag_network.get(message.chat.id) and message.text == 'Далее':
         await send_msg(message, text_user=msg_text.blog.aim(), admins=())
         msg_text.blog.flag_aim[message.chat.id] = True
-    elif msg_text.blog.flag_aim.get(message.chat.id):
-        msg_text.base.category[message.chat.id] += '\nКто является вашей целевой аудиторией: ' + message.text
+    elif msg_text.blog.flag_aim.get(message.chat.id) and message.text != 'Далее':
+        if 'Кто является вашей целевой аудиторией:' in msg_text.base.category[message.chat.id]:
+            msg_text.base.category[message.chat.id] += message.text
+        else:
+            msg_text.base.category[message.chat.id] += '\nКто является вашей целевой аудиторией: '\
+                                                       + message.text
+
+    elif msg_text.blog.flag_aim.get(message.chat.id) and message.text == 'Далее':
         await send_msg(message, text_user=msg_text.blog.budget(), admins=())
         msg_text.blog.flag_budget[message.chat.id] = True
     elif msg_text.blog.flag_budget.get(message.chat.id):
         msg_text.base.category[message.chat.id] += '\nКакой у Вас рекламный бюджет: ' + message.text
-        await send_msg(message, text_user=msg_text.blog.finish(), text_admin=msg_text.base.category[message.chat.id])
+        await send_msg(message, text_user=msg_text.blog.finish(), text_admin=msg_text.base.category[message.chat.id],
+                       markup=markups.clean_markup)
     elif msg_text.admin.flag_for_password.get(message.chat.id):
         if config.ADMIN_PASSWORD == message.text:
             clear_flags(message)
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            markup.add(types.KeyboardButton(text='Рассылки сообщений'))
-            markup.add(types.KeyboardButton(text='Просмотр всех пользователей'))
-            markup.add(types.KeyboardButton(text='<< Вернуться назад'))
 
-            await bot.send_message(chat_id=message.chat.id, text=msg_text.admin.start(), reply_markup=markup)
+            await bot.send_message(chat_id=message.chat.id, text=msg_text.admin.start(),
+                                   reply_markup=markups.admin_markup)
             msg_text.admin.flag_account[message.chat.id] = True
         else:
             await send_msg(message, text_user=msg_text.admin.password_false(), admins=())
@@ -183,13 +180,7 @@ async def newsletter(message):
 
 async def services(message):
     text = msg_text.base.services()
-    markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton(text='Разработка чат-ботов', callback_data='develop_bots'))
-    markup.add(types.InlineKeyboardButton(text='Реклама у блогеров', callback_data='bloggers'))
-    markup.add(types.InlineKeyboardButton(text='Продвижение в телеграмм', callback_data='promotion_telegram'))
-    markup.add(types.InlineKeyboardButton(text='Создание сайтов', callback_data='sites'))
-    markup.add(types.InlineKeyboardButton(text='Дизайн', callback_data='design'))
-    await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markup)
+    await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.services_markup)
 
 
 @bot.pre_checkout_query_handler(func=lambda query: True)
@@ -209,11 +200,10 @@ async def develop_bots(callback):
     msg_text.base.category[callback.message.chat.id] = f'<strong>Разработка чат-ботов</strong>'
     text = msg_text.dev_bots.start()
     msg_text.dev_bots.flag_develop_bots[callback.message.chat.id] = True
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add(types.KeyboardButton(text='Всё'))
+
     await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
     await bot.send_message(chat_id=callback.message.chat.id,
-                                text=text, reply_markup=markup)
+                           text=text, reply_markup=markups.continue_markup)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'bloggers')
@@ -221,25 +211,16 @@ async def bloggers(callback):
     msg_text.base.category[callback.message.chat.id] = f'<strong>Реклама у блогеров</strong>'
     text = msg_text.blog.start()
     msg_text.blog.flag_for_bloggers[callback.message.chat.id] = True
-    await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text)
+    await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
+                                text=text, reply_markup=markups.continue_markup)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'promotion_telegram')
 async def prom_telegram(callback):
     msg_text.base.category[callback.message.chat.id] = f'<strong>Продвижение в телеграмм</strong>'
-    markup = types.InlineKeyboardMarkup(row_width=3)
-    markup.add(types.InlineKeyboardButton(text='Рассылки в Telegram', callback_data='prom_tg_1'))
-    markup.add(types.InlineKeyboardButton(text='Парсинг подписчиков', callback_data='prom_tg_2'))
-    markup.add(types.InlineKeyboardButton(text='Инвайт в группы', callback_data='prom_tg_3'))
-    markup.add(types.InlineKeyboardButton(text='PR компании', callback_data='prom_tg_4'))
-    markup.add(types.InlineKeyboardButton(text='Циклические публикации в чатах',
-                                          callback_data='prom_tg_5'))
-    markup.add(types.InlineKeyboardButton(text='Посев нативных комментариев',
-                                          callback_data='prom_tg_6'))
     text = msg_text.prom_tg.start()
-    msg_text.prom_tg.flag_prom_tg[callback.message.chat.id] = True
     await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text,
-                                reply_markup=markup)
+                                reply_markup=markups.prom_tg_markup)
 
 
 @bot.callback_query_handler(func=lambda callback: 'prom_tg' in callback.data)
@@ -252,19 +233,17 @@ async def prom_telegram_2(callback):
                  }
     msg_text.prom_tg.category[callback.message.chat.id] = categories[callback.data.split('_')[-1]]
     msg_text.prom_tg.flag_prom_tg[callback.message.chat.id] = True
-    await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text)
+    await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
+    await bot.send_message(chat_id=callback.message.chat.id, text=text, reply_markup=markups.back_markup)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'sites')
 async def sites(callback):
     msg_text.base.category[callback.message.chat.id] = f'<strong>Создание сайтов</strong>'
     text = msg_text.site.start()
-    markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton(text='Заполнить бриф', callback_data='brief_site_1'))
-    markup.add(types.InlineKeyboardButton(text='Нужна помощь специалиста',
-                                          callback_data='brief_site_2'))
+
     await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
-                                text=text, reply_markup=markup)
+                                text=text, reply_markup=markups.brief_site_markup)
 
 
 @bot.callback_query_handler(func=lambda callback: 'brief' in callback.data)
@@ -292,12 +271,16 @@ async def brief(callback):
 async def design(callback):
     msg_text.base.category[callback.message.chat.id] = f'<strong>Дизайн</strong>'
     text = msg_text.design_obj.start()
-    markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton(text='Заполнить бриф', callback_data='brief_design_1'))
-    markup.add(types.InlineKeyboardButton(text='Нужна помощь специалиста',
-                                          callback_data='brief_design_2'))
     await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
-                                text=text, reply_markup=markup)
+                                text=text, reply_markup=markups.brief_design_markup)
+
+
+@bot.callback_query_handler(func=lambda callback: callback.data == 'pay_service')
+async def payment_of_services(callback):
+    await bot.send_invoice(chat_id=callback.message.chat.id, title='Оплата услуг',
+                           description='Тестовое описание товара', invoice_payload='payment_service',
+                           provider_token=config.YOO_TOKEN, currency='RUB', start_parameter='MarketingFreelance_bot',
+                           prices=[types.LabeledPrice(label='Оплата услуг', amount='100000')])
 
 
 @bot.message_handler(content_types=['document'])
@@ -308,7 +291,6 @@ async def get_docs(message):
         text = msg_text.site.finish()
         category = msg_text.base.category.get(message.chat.id)
         text_category = f'<strong>{category}</strong>\n'
-
         await send_msg(message, text_user=text, text_admin=text_category)
         await bot.send_document(chat_id=config.ADMINS['sourr_cream'], document=message.document.file_id)  # qzark
         await bot.send_document(chat_id=config.ADMINS['sourr_cream'], document=message.document.file_id)  # decotto

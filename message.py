@@ -60,7 +60,8 @@ class Basement:
         return text
 
     def about(self):
-        text = 'О нас'
+        text = 'Пожалуй самый легкий способ заказать качественные услуги.\n' \
+               '<small><small>Пользуясь сервисом вы соглашаетесь с обработкой ваших данных </small></small>'
         return text
 
     def support_start(self):
@@ -68,11 +69,11 @@ class Basement:
         return text
 
     def support_finish(self):
-        text = 'Мы уже работаем над решением проблемы, ожидайте ответа.'
+        text = 'Наш менеджер скоро свяжется с Вами'
         return text
 
     def payment(self):
-        text = 'Описание возможностей оплаты услуг'
+        text = 'Вы можете оплатить наши услуги с помощью банковских карт и кошельков Юмани, Qiwi'
         return text
 
     def success_pay(self):
@@ -90,11 +91,11 @@ class DevelopBots(BaseMessages):
 
     def start(self, name=None):
         text = 'Расскажите какие задачи должен выполнять чат-бот и какой функционал Вам интересен?\n' \
-               'Как закончите свое описание нажмите кнопку "Всё"'
+               'После заполнения нажмите кнопку «Далее»'
         return text
 
     def finish(self):
-        text = 'Благодарим за сообщение, мы свяжемся с Вами в ближайшее время!'
+        text = 'Наш менеджер скоро свяжется с Вами'
         return text
 
 
@@ -110,11 +111,14 @@ class Bloggers(BaseMessages):
         return text
 
     def network(self):
-        text = 'В какой социальной сети?'
+        text = 'Расскажите подробнее, о вашем товаре/услуге?\n' \
+                'После заполнения нажмите кнопку «Далее»'
+
         return text
 
     def aim(self):
-        text = 'Кто является вашей целевой аудиторией? Опишите портрет клиента'
+        text = 'Кто является вашей целевой аудиторией? Опишите портрет клиента' \
+               'После заполнения нажмите кнопку «Далее»'
         return text
 
     def budget(self):
@@ -144,6 +148,10 @@ class PromotionTelegram(BaseMessages):
         return text
 
 
+class ListPromotionTelegram:
+    ...
+
+
 class Sites(BaseMessages):
     def __init__(self):
         self.flag_sites = {}
@@ -164,7 +172,7 @@ class Sites(BaseMessages):
         return text
 
     def finish(self):
-        text = 'Благодарим за заказ, мы свяжемся с вами в ближайшее время'
+        text = 'Наш менеджер скоро свяжется с Вами'
         return text
 
 
@@ -187,7 +195,7 @@ class Design(BaseMessages):
         return text
 
     def finish(self):
-        text = 'Благодарим за заказ, мы свяжемся с вами в ближайшее время'
+        text = 'Наш менеджер скоро свяжется с Вами'
         return text
 
 
