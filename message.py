@@ -134,7 +134,7 @@ class Bloggers(BaseMessages, Finish):
 
 class PromotionTelegram(BaseMessages, Finish):
     def __init__(self):
-        self.flag_prom_tg, self.invite = {}, {}
+        self.flag_prom_tg = {}
         self.category = {}
         self.msg_for_delete = {}
         self.all_categories = {
@@ -146,10 +146,6 @@ class PromotionTelegram(BaseMessages, Finish):
 
     def start(self):
         text = 'Если вам нужно продвинуть ваши товары/услуги в telegram, то Вы обратились по адресу'
-        return text
-
-    def main_menu(self):
-        text = 'Выберите кнопку "<< Назад", чтобы вернуться в главное меню Продвижения в телеграмм'
         return text
 
     def finish(self):

@@ -28,6 +28,11 @@ admin_markup.add(types.KeyboardButton(text='<< Вернуться назад'))
 back_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 back_markup.add(types.KeyboardButton(text='<< Назад'))
 
+'''back markup with continue markup'''
+back_continue_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+back_continue_markup.add(types.KeyboardButton(text='Далее'))
+back_continue_markup.add(types.KeyboardButton(text='<< Назад'))
+
 
 '''InlineKeyboardMarkup'''
 
@@ -50,6 +55,7 @@ prom_tg_markup.add(types.InlineKeyboardButton(text='Циклические пу�
 prom_tg_markup.add(types.InlineKeyboardButton(text='Посев нативных комментариев',
                                               callback_data='prom_tg_6'))
 prom_tg_markup.add(types.InlineKeyboardButton(text='Комплексное продвижение', callback_data='prom_tg_7'))
+prom_tg_markup.add(types.InlineKeyboardButton(text='<< Назад', callback_data='back_service'))
 
 '''brief site markup'''
 brief_site_markup = types.InlineKeyboardMarkup()
@@ -65,11 +71,22 @@ brief_design_markup.add(types.InlineKeyboardButton(text='Нужна помощь
 
 '''href to services'''
 href_service_markup = types.InlineKeyboardMarkup()
-href_service_markup.add(types.InlineKeyboardButton(text='Услуги', callback_data='pay_service'))
+href_service_markup.add(types.InlineKeyboardButton(text='Услуги', callback_data='back_service'))
 
-'''prom_tg_invite'''
+'''invite from promotion telegram'''
 prom_tg_invite_markup = types.InlineKeyboardMarkup()
 prom_tg_invite_markup.add(types.InlineKeyboardButton(text='Отлично, хочу', callback_data='prom_tg_2_want'))
 prom_tg_invite_markup.add(types.InlineKeyboardButton(text='Спасибо, я подумаю', callback_data='promotion_telegram'))
+
+'''cycle and comments from promotion telegram'''
+prom_tg_cycle_comments_markup = types.InlineKeyboardMarkup()
+prom_tg_cycle_comments_markup.add(types.InlineKeyboardButton(text='Заказать услугу', callback_data='prom_tg_5_6_want'))
+prom_tg_cycle_comments_markup.add(types.InlineKeyboardButton(text='Вернуться к списку услуг',
+                                                             callback_data='promotion_telegram'))
+
+'''newsletter from promotion telegram'''
+prom_tg_newsletter_markup = types.InlineKeyboardMarkup()
+prom_tg_newsletter_markup.add(types.InlineKeyboardButton(text='Да', callback_data='prom_tg_1_want'))
+prom_tg_newsletter_markup.add(types.InlineKeyboardButton(text='Нет, нужна ваша помощь', callback_data='prom_tg_1_sup'))
 
 

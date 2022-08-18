@@ -23,7 +23,7 @@ def clear_flags(message, callback=False, not_delete=()):
              'msg_text.design_obj.flag_sup_brief', 'msg_text.design_obj.send_doc', 'msg_text.site.send_doc',
              'msg_text.blog.flag_for_bloggers', 'msg_text.blog.flag_detail_product', 'msg_text.blog.flag_aim',
              'msg_text.blog.flag_budget', 'msg_text.admin.flag_for_password', 'msg_text.prom_tg.msg_for_delete',
-             'msg_text.prom_tg.invite'
+             'msg_text.prom_tg.flag_prom_tg'
              )
     for flag in flags:
         if flag not in not_delete:
@@ -218,12 +218,15 @@ async def get_messages(message):
     # Base to go over to main menu of promotion telegram
     elif message.text == '<< Назад' and msg_text.prom_tg.flag_prom_tg.get(message.chat.id):
         text = msg_text.prom_tg.start()
+
+        msg_text.base.category[message.chat.id] = '\n'.join(msg_text.base.category[message.chat.id].split('\n')[:1])
+
         await bot.delete_message(chat_id=message.chat.id, message_id=msg_text.prom_tg.msg_for_delete[message.chat.id].id)
         await bot.send_message(chat_id=message.chat.id, text=text,
                                reply_markup=markups.prom_tg_markup)
 
-    # Invite to groups from service of promotion telegram
-    elif msg_text.prom_tg.invite.get(message.chat.id):
+    # Invite to groups from service of promotion telegram / Parsing subscribers / PR-company
+    elif msg_text.prom_tg.flag_prom_tg.get(message.chat.id) and message.text != '<< Назад':
         if message.text != 'Далее':
             msg_text.base.category[message.chat.id] += f'\n{message.text}'
         else:
@@ -345,7 +348,7 @@ async def prom_telegram(callback):
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_1')
 async def prom_tg_newsletter(callback):
     text = msg_text.ListPromotionTelegramNewsletter().start()
-    await general_prom_tg(callback, text_start=text)
+    await general_prom_tg(callback, text_start=text, markup=markups.prom_tg_newsletter_markup)  # ToDo: prom_tg_1 - newsletter
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_2')
@@ -358,32 +361,48 @@ async def prom_tg_invite(callback):
 async def prom_tg_invite_want(callback):
     await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
     text = msg_text.ListPromotionTelegramInvite().press_yes()
-    msg_text.prom_tg.invite[callback.message.chat.id] = True
-    await bot.send_message(chat_id=callback.message.chat.id, text=text, reply_markup=markups.continue_markup)
+    msg_text.prom_tg.flag_prom_tg[callback.message.chat.id] = True
+    msg_text.base.category[callback.message.chat.id] += '\n<strong>Инвайт в группы</strong>'
+    msg = await bot.send_message(chat_id=callback.message.chat.id, text=text, reply_markup=markups.back_continue_markup)
+    msg_text.prom_tg.msg_for_delete[callback.message.chat.id] = msg
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_3')
 async def prom_tg_parsing(callback):
     text = msg_text.ListPromotionTelegramParsing().start()
-    await general_prom_tg(callback, text_start=text)
+    msg_text.prom_tg.flag_prom_tg[callback.message.chat.id] = True
+    msg_text.base.category[callback.message.chat.id] += '\n<strong>Парсинг подписчиков</strong>'
+    await general_prom_tg(callback, text_start=text, markup=markups.back_continue_markup)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_4')
 async def prom_tg_pr(callback):
     text = msg_text.ListPromotionTelegramPR().start()
-    await general_prom_tg(callback, text_start=text)
+    msg_text.prom_tg.flag_prom_tg[callback.message.chat.id] = True
+    msg_text.base.category[callback.message.chat.id] += '\n<strong>PR компании</strong>'
+
+    await general_prom_tg(callback, text_start=text, markup=markups.back_continue_markup)
 
 
-@bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_5')
-async def prom_tg_cycle(callback):
-    text = msg_text.ListPromotionTelegramCycle().start()
-    await general_prom_tg(callback, text_start=text)
+@bot.callback_query_handler(func=lambda callback: callback.data in ['prom_tg_5', 'prom_tg_6'])
+async def prom_tg_cycle_comments(callback):
+    if callback.data == 'prom_tg_5':
+        msg_text.base.category[callback.message.chat.id] += '\n<strong>Циклические публикации в чатах</strong>'
+        text = msg_text.ListPromotionTelegramCycle().start()
+    else:
+        msg_text.base.category[callback.message.chat.id] += '\n<strong>Посев нативных комментариев</strong>'
+        text = msg_text.ListPromotionTelegramComments().start()
+    await general_prom_tg(callback, text_start=text, markup=markups.prom_tg_cycle_comments_markup)
 
 
-@bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_6')
-async def prom_tg_comments(callback):
-    text = msg_text.ListPromotionTelegramComments().start()
-    await general_prom_tg(callback, text_start=text)
+@bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_5_6_want')
+async def prom_tg_cycle_comments_want(callback):
+    msg_text.base.category[callback.message.chat.id] += '\nКлиент хочет заказать услугу'
+    text = msg_text.ListPromotionTelegramCycle().finish()
+    text_admin = msg_text.base.category.get(callback.message.chat.id)
+    await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
+    await send_msg(callback.message, text_user=text, text_admin=text_admin)
+
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_7')
@@ -393,18 +412,16 @@ async def prom_tg_complex(callback):
 
 
 async def general_prom_tg(callback, text_start, markup=None):
-    # text_menu = msg_text.prom_tg.main_menu()
     msg_text.prom_tg.category[callback.message.chat.id] = msg_text.prom_tg.all_categories[callback.data.split('_')[-1]]
     msg_text.prom_tg.flag_prom_tg[callback.message.chat.id] = True
     await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
     if markup:
-        await bot.send_message(chat_id=callback.message.chat.id, text=text_start,
-                               reply_markup=markup)
+        msg = await bot.send_message(chat_id=callback.message.chat.id, text=text_start,
+                                     reply_markup=markup)
     else:
-        await bot.send_message(chat_id=callback.message.chat.id, text=text_start)
+        msg = await bot.send_message(chat_id=callback.message.chat.id, text=text_start)
 
-    # msg = await bot.send_message(chat_id=callback.message.chat.id, text=text_menu, reply_markup=markups.back_markup)
-    # msg_text.prom_tg.msg_for_delete[callback.message.chat.id] = msg
+    msg_text.prom_tg.msg_for_delete[callback.message.chat.id] = msg
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'sites')
@@ -443,8 +460,8 @@ async def design(callback):
                                 text=text, reply_markup=markups.brief_design_markup)
 
 
-@bot.callback_query_handler(func=lambda callback: callback.data == 'pay_service')
-async def payment_of_services(callback):
+@bot.callback_query_handler(func=lambda callback: callback.data == 'back_service')
+async def back_to_services(callback):
     await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
     await services(callback.message)
 
