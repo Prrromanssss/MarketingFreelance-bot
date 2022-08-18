@@ -104,7 +104,7 @@ class DevelopBots(BaseMessages, Finish):
 class Bloggers(BaseMessages, Finish):
     def __init__(self):
         self.flag_for_bloggers = {}
-        self.flag_network = {}
+        self.flag_detail_product = {}
         self.flag_aim = {}
         self.flag_budget = {}
 
@@ -112,7 +112,7 @@ class Bloggers(BaseMessages, Finish):
         text = 'Что Вы хотите рекламировать?'
         return text
 
-    def network(self):
+    def detail_product(self):
         text = 'Расскажите подробнее, о вашем товаре/услуге?\n' \
                 'После заполнения нажмите кнопку «Далее»'
 
@@ -134,7 +134,7 @@ class Bloggers(BaseMessages, Finish):
 
 class PromotionTelegram(BaseMessages, Finish):
     def __init__(self):
-        self.flag_prom_tg = {}
+        self.flag_prom_tg, self.invite = {}, {}
         self.category = {}
         self.msg_for_delete = {}
         self.all_categories = {
@@ -146,6 +146,10 @@ class PromotionTelegram(BaseMessages, Finish):
 
     def start(self):
         text = 'Если вам нужно продвинуть ваши товары/услуги в telegram, то Вы обратились по адресу'
+        return text
+
+    def main_menu(self):
+        text = 'Выберите кнопку "<< Назад", чтобы вернуться в главное меню Продвижения в телеграмм'
         return text
 
     def finish(self):
@@ -208,6 +212,12 @@ class ListPromotionTelegramComments(BaseMessages, Finish):
     def start(self):
         text = 'При заказе данной услуги, в нужных Вам чатах, размещаются сообщения содержащие нативную рекламу' \
                ' ваших товаров/услуг'
+        return text
+
+
+class ListPromotionTelegramComplex(BaseMessages, Finish):
+    def start(self):
+        text = 'complex'
         return text
 
 

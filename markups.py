@@ -42,8 +42,8 @@ services_markup.add(types.InlineKeyboardButton(text='Дизайн', callback_dat
 '''promotion telegram markup'''
 prom_tg_markup = types.InlineKeyboardMarkup(row_width=3)
 prom_tg_markup.add(types.InlineKeyboardButton(text='Рассылки в Telegram', callback_data='prom_tg_1'))
-prom_tg_markup.add(types.InlineKeyboardButton(text='Парсинг подписчиков', callback_data='prom_tg_2'))
-prom_tg_markup.add(types.InlineKeyboardButton(text='Инвайт в группы', callback_data='prom_tg_3'))
+prom_tg_markup.add(types.InlineKeyboardButton(text='Инвайт в группы', callback_data='prom_tg_2'))
+prom_tg_markup.add(types.InlineKeyboardButton(text='Парсинг подписчиков', callback_data='prom_tg_3'))
 prom_tg_markup.add(types.InlineKeyboardButton(text='PR компании', callback_data='prom_tg_4'))
 prom_tg_markup.add(types.InlineKeyboardButton(text='Циклические публикации в чатах',
                                               callback_data='prom_tg_5'))
@@ -63,7 +63,13 @@ brief_design_markup.add(types.InlineKeyboardButton(text='Заполнить бр
 brief_design_markup.add(types.InlineKeyboardButton(text='Нужна помощь специалиста',
                                                    callback_data='brief_design_2'))
 
-'''payment of service'''
-pay_service_markup = types.InlineKeyboardMarkup()
-pay_service_markup.add(types.InlineKeyboardButton(text='Услуги', callback_data='pay_service'))
+'''href to services'''
+href_service_markup = types.InlineKeyboardMarkup()
+href_service_markup.add(types.InlineKeyboardButton(text='Услуги', callback_data='pay_service'))
+
+'''prom_tg_invite'''
+prom_tg_invite_markup = types.InlineKeyboardMarkup()
+prom_tg_invite_markup.add(types.InlineKeyboardButton(text='Отлично, хочу', callback_data='prom_tg_2_want'))
+prom_tg_invite_markup.add(types.InlineKeyboardButton(text='Спасибо, я подумаю', callback_data='promotion_telegram'))
+
 

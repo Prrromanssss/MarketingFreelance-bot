@@ -21,8 +21,9 @@ def clear_flags(message, callback=False, not_delete=()):
              'msg_text.prom_tg.category', 'msg_text.base.flag_support', 'msg_text.site.flag_sites',
              'msg_text.design_obj.flag_design', 'msg_text.site.flag_sup_brief',
              'msg_text.design_obj.flag_sup_brief', 'msg_text.design_obj.send_doc', 'msg_text.site.send_doc',
-             'msg_text.blog.flag_for_bloggers', 'msg_text.blog.flag_network', 'msg_text.blog.flag_aim',
-             'msg_text.blog.flag_budget', 'msg_text.admin.flag_for_password', 'msg_text.prom_tg.msg_for_delete'
+             'msg_text.blog.flag_for_bloggers', 'msg_text.blog.flag_detail_product', 'msg_text.blog.flag_aim',
+             'msg_text.blog.flag_budget', 'msg_text.admin.flag_for_password', 'msg_text.prom_tg.msg_for_delete',
+             'msg_text.prom_tg.invite'
              )
     for flag in flags:
         if flag not in not_delete:
@@ -70,109 +71,185 @@ async def administration(message):
 
 @bot.message_handler(content_types=['text'])
 async def get_messages(message):
+    """Handler to process text message"""
+
+    '''This coroutine process all text message using flags'''
+
+    # ---------------------------
+    #   Administration basement
+    # ---------------------------
+
+    # Base to start sending out messages to all users
     if msg_text.admin.flag_account.get(message.chat.id) and message.text == 'Рассылки сообщений':
         msg_text.admin.flag_for_newsletter[message.chat.id] = True
         text = msg_text.admin.newsletter()
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(types.KeyboardButton(text='Стоп'))
         await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markup)
+
+    # Sending out messages to all users
+    elif msg_text.admin.flag_for_newsletter.get(message.chat.id):
+        users_id = models.db_object.db_select_all_users_id()
+        for chat_id in users_id:
+            await bot.forward_message(chat_id[0], message.chat.id, message.message_id)
+
+    # Base to stop send out messages to users and to go over to main menu
     elif (msg_text.admin.flag_account.get(message.chat.id) and msg_text.admin.flag_for_newsletter.get(message.chat.id)
             and message.text == 'Стоп'):
         del msg_text.admin.flag_for_newsletter[message.chat.id]
         text = msg_text.admin.success_newsletter()
         await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.admin_markup)
+
+    # Base to see all users subscribed to bot
     elif msg_text.admin.flag_account.get(message.chat.id) and message.text == 'Просмотр всех пользователей':
         usernames = models.db_object.db_select_all_users()
         text = ''
         for user in usernames:
             text += f'<strong>Юзернейм:</strong> @{user[0]}\n'
         await bot.send_message(chat_id=message.chat.id, text=text, parse_mode='html')
+
+    # Base to return to usual user's account
     elif msg_text.admin.flag_account.get(message.chat.id) and message.text == '<< Вернуться назад':
         del msg_text.admin.flag_account[message.chat.id]
         clear_flags(message)
         text = msg_text.admin.finish()
         await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.main_markup)
         await services(message)
-    elif msg_text.admin.flag_for_newsletter.get(message.chat.id):
-        users_id = models.db_object.db_select_all_users_id()
-        for chat_id in users_id:
-            await bot.forward_message(chat_id[0], message.chat.id, message.message_id)
+
+    # -----------------------
+    #   Usual user basement
+    # -----------------------
+
+    # Base to see variants of payments
     elif message.text == 'Оплата услуг':
         clear_flags(message)
         text = msg_text.base.payment()
-        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.pay_service_markup)
+        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.href_service_markup)
+
+    # Base to know about us
     elif message.text == 'О нас':
         clear_flags(message)
         text = msg_text.base.about()
         await bot.send_message(chat_id=message.chat.id, text=text)
+
+    # Base to go over to services we provide
     elif message.text == 'Услуги':
         clear_flags(message)
         await services(message)
+
+    # Base to start texting message to support
     elif message.text == 'Поддержка':
         msg_text.base.category[message.chat.id] = '<strong>Поддержка</strong>'
         clear_flags(message, not_delete=('msg_text.base.flag_support',))
         msg_text.base.flag_support[message.chat.id] = True
         text = msg_text.base.support_start()
         await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.continue_markup)
+
+    # Texting message to support
+    elif msg_text.base.flag_support.get(message.chat.id):
+        if message.text != 'Далее':
+            msg_text.base.category[message.chat.id] = msg_text.base.category.get(message.chat.id) + '\n' + message.text
+        else:
+            text_admin = msg_text.base.category[message.chat.id]
+            await send_msg(message=message, text_user=msg_text.base.support_finish(),
+                           text_admin=text_admin, markup=markups.clean_markup)
+
+    # ------------------------------
+    #   Service of developing bots
+    # ------------------------------
+
+    # Processing incoming messages and sending them to admins
+    elif msg_text.dev_bots.flag_develop_bots.get(message.chat.id):
+        if message.text != 'Далее':
+            msg_text.base.category[message.chat.id] += f'\n{message.text}'
+        else:
+            text_admin = msg_text.base.category.get(message.chat.id)
+            await send_msg(message=message, text_user=msg_text.dev_bots.finish(), text_admin=text_admin,
+                           markup=markups.main_markup)
+
+    # -------------------------------
+    #   Service of ad from bloggers
+    # -------------------------------
+
+    # The answer from the first question
+    elif msg_text.blog.flag_for_bloggers.get(message.chat.id):
+        msg_text.base.category[message.chat.id] += '\nЧто Вы хотите рекламировать: ' + message.text
+        await send_msg(message, text_user=msg_text.blog.detail_product(), admins=(), markup=markups.continue_markup)
+        msg_text.blog.flag_detail_product[message.chat.id] = True
+
+    # The answer from the second question
+    elif msg_text.blog.flag_detail_product.get(message.chat.id):
+        if message.text != 'Далее':
+            if 'Расскажите подробнее, о вашем товаре/услуге?:' in msg_text.base.category[message.chat.id]:
+                msg_text.base.category[message.chat.id] += message.text
+            else:
+                msg_text.base.category[message.chat.id] += '\nРасскажите подробнее, о вашем товаре/услуге?: '\
+                                                           + message.text
+        else:
+            if 'Расскажите подробнее, о вашем товаре/услуге?:' not in msg_text.base.category[message.chat.id]:
+                msg_text.base.category[message.chat.id] += '\nРасскажите подробнее, о вашем товаре/услуге?: ' + '-'
+            await send_msg(message, text_user=msg_text.blog.aim(), admins=())
+            msg_text.blog.flag_aim[message.chat.id] = True
+
+    # The answer from the third question
+    elif msg_text.blog.flag_aim.get(message.chat.id):
+        if message.text != 'Далее':
+            if 'Кто является вашей целевой аудиторией:' in msg_text.base.category[message.chat.id]:
+                msg_text.base.category[message.chat.id] += message.text
+            else:
+                msg_text.base.category[message.chat.id] += '\nКто является вашей целевой аудиторией: '\
+                                                           + message.text
+        else:
+            if 'Кто является вашей целевой аудиторией:' not in msg_text.base.category[message.chat.id]:
+                msg_text.base.category[message.chat.id] += '\nКто является вашей целевой аудиторией: ' + '-'
+            await send_msg(message, text_user=msg_text.blog.budget(), admins=(), markup=markups.clean_markup)
+            msg_text.blog.flag_budget[message.chat.id] = True
+
+    # The answer from the fourth question
+    elif msg_text.blog.flag_budget.get(message.chat.id):
+        msg_text.base.category[message.chat.id] += '\nКакой у Вас рекламный бюджет: ' + message.text
+        await send_msg(message, text_user=msg_text.blog.finish(), text_admin=msg_text.base.category[message.chat.id],
+                       markup=markups.clean_markup)
+
+    # ---------------------------------
+    #   Service of promotion telegram
+    # ---------------------------------
+
+    # Base to go over to main menu of promotion telegram
     elif message.text == '<< Назад' and msg_text.prom_tg.flag_prom_tg.get(message.chat.id):
         text = msg_text.prom_tg.start()
         await bot.delete_message(chat_id=message.chat.id, message_id=msg_text.prom_tg.msg_for_delete[message.chat.id].id)
         await bot.send_message(chat_id=message.chat.id, text=text,
                                reply_markup=markups.prom_tg_markup)
-    elif msg_text.dev_bots.flag_develop_bots.get(message.chat.id) and message.text != 'Далее':
-        msg_text.base.category[message.chat.id] += f'\n{message.text}'
-    elif msg_text.dev_bots.flag_develop_bots.get(message.chat.id) and message.text == 'Далее':
 
-        text_admin = msg_text.base.category.get(message.chat.id)
-        await send_msg(message=message, text_user=msg_text.dev_bots.finish(), text_admin=text_admin,
-                       markup=markups.main_markup)
-    elif msg_text.prom_tg.flag_prom_tg.get(message.chat.id):
-        text_admin = f'{msg_text.base.category.get(message.chat.id)}\n' \
-                     f'<strong>{msg_text.prom_tg.category.get(message.chat.id)}</strong>\n{message.text}'
-        await send_msg(message=message, text_user=msg_text.prom_tg.finish(), admins=('sourr_cream',),  # qzark
-                       text_admin=text_admin)
-    elif msg_text.base.flag_support.get(message.chat.id) and message.text != 'Далее':
-        msg_text.base.category[message.chat.id] = msg_text.base.category.get(message.chat.id) + '\n' + message.text
-    elif msg_text.base.flag_support.get(message.chat.id) and message.text == 'Далее':
-        text_admin = msg_text.base.category[message.chat.id]
-        await send_msg(message=message, text_user=msg_text.base.support_finish(),
-                       text_admin=text_admin, markup=markups.clean_markup)
+    # Invite to groups from service of promotion telegram
+    elif msg_text.prom_tg.invite.get(message.chat.id):
+        if message.text != 'Далее':
+            msg_text.base.category[message.chat.id] += f'\n{message.text}'
+        else:
+            text_admin = msg_text.base.category[message.chat.id]
+            await send_msg(message, text_user=msg_text.ListPromotionTelegramInvite().finish(),
+                           text_admin=text_admin, markup=markups.main_markup)
+
+    # ------------------------------------------------------------------------
+    #   Service of creating sites and design (they have the same functional)
+    # ------------------------------------------------------------------------
+
+    # Processing brief
     elif msg_text.site.send_doc.get(message.chat.id) or msg_text.design_obj.send_doc.get(message.chat.id):
         text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
-        await send_msg(message=message, text_user=msg_text.dev_bots.finish(), text_admin=text_admin)
+        await send_msg(message=message, text_user=msg_text.site.finish(), text_admin=text_admin)
+
+    # Appeal to support
     elif msg_text.design_obj.flag_sup_brief.get(message.chat.id) or msg_text.site.flag_sup_brief.get(message.chat.id):
         text_admin = msg_text.base.category.get(message.chat.id) + '\n' + message.text
         await send_msg(message=message, text_user=msg_text.base.support_finish(), text_admin=text_admin)
-    elif msg_text.blog.flag_for_bloggers.get(message.chat.id):
-        msg_text.base.category[message.chat.id] += '\nЧто Вы хотите рекламировать: ' + message.text
-        await send_msg(message, text_user=msg_text.blog.network(), admins=(), markup=markups.continue_markup)
-        msg_text.blog.flag_network[message.chat.id] = True
-    elif msg_text.blog.flag_network.get(message.chat.id) and message.text != 'Далее':
-        if 'Расскажите подробнее, о вашем товаре/услуге?:' in msg_text.base.category[message.chat.id]:
-            msg_text.base.category[message.chat.id] += message.text
-        else:
-            msg_text.base.category[message.chat.id] += '\nРасскажите подробнее, о вашем товаре/услуге?: '\
-                                                       + message.text
-    elif msg_text.blog.flag_network.get(message.chat.id) and message.text == 'Далее':
-        if 'Расскажите подробнее, о вашем товаре/услуге?:' not in msg_text.base.category[message.chat.id]:
-            msg_text.base.category[message.chat.id] += '\nРасскажите подробнее, о вашем товаре/услуге?: ' + '-'
-        await send_msg(message, text_user=msg_text.blog.aim(), admins=())
-        msg_text.blog.flag_aim[message.chat.id] = True
-    elif msg_text.blog.flag_aim.get(message.chat.id) and message.text != 'Далее':
-        if 'Кто является вашей целевой аудиторией:' in msg_text.base.category[message.chat.id]:
-            msg_text.base.category[message.chat.id] += message.text
-        else:
-            msg_text.base.category[message.chat.id] += '\nКто является вашей целевой аудиторией: '\
-                                                       + message.text
-    elif msg_text.blog.flag_aim.get(message.chat.id) and message.text == 'Далее':
-        if 'Кто является вашей целевой аудиторией:' not in msg_text.base.category[message.chat.id]:
-            msg_text.base.category[message.chat.id] += '\nКто является вашей целевой аудиторией: ' + '-'
-        await send_msg(message, text_user=msg_text.blog.budget(), admins=(), markup=markups.clean_markup)
-        msg_text.blog.flag_budget[message.chat.id] = True
-    elif msg_text.blog.flag_budget.get(message.chat.id):
-        msg_text.base.category[message.chat.id] += '\nКакой у Вас рекламный бюджет: ' + message.text
-        await send_msg(message, text_user=msg_text.blog.finish(), text_admin=msg_text.base.category[message.chat.id],
-                       markup=markups.clean_markup)
+
+    # --------------------------
+    #   Enter to admin account
+    # --------------------------
+
+    # Compare input to password
     elif msg_text.admin.flag_for_password.get(message.chat.id):
         if config.ADMIN_PASSWORD == message.text:
             clear_flags(message)
@@ -181,6 +258,12 @@ async def get_messages(message):
             msg_text.admin.flag_account[message.chat.id] = True
         else:
             await send_msg(message, text_user=msg_text.admin.password_false(), admins=())
+
+    # ------------------
+    #   Another cases
+    # -----------------
+
+    # Unknown message
     else:
         await send_msg(message=message, text_user=msg_text.base.unknown(), admins=())
 
@@ -261,52 +344,67 @@ async def prom_telegram(callback):
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_1')
 async def prom_tg_newsletter(callback):
-    text = msg_text.ListPromotionTelegram()
-    await general_prom_tg(callback, text)
+    text = msg_text.ListPromotionTelegramNewsletter().start()
+    await general_prom_tg(callback, text_start=text)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_2')
-async def prom_tg_newsletter(callback):
-    text = msg_text.ListPromotionTelegram()
-    await general_prom_tg(callback, text)
+async def prom_tg_invite(callback):
+    text = msg_text.ListPromotionTelegramInvite().start()
+    await general_prom_tg(callback, text_start=text, markup=markups.prom_tg_invite_markup)
+
+
+@bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_2_want')
+async def prom_tg_invite_want(callback):
+    await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
+    text = msg_text.ListPromotionTelegramInvite().press_yes()
+    msg_text.prom_tg.invite[callback.message.chat.id] = True
+    await bot.send_message(chat_id=callback.message.chat.id, text=text, reply_markup=markups.continue_markup)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_3')
-async def prom_tg_newsletter(callback):
-    text = msg_text.ListPromotionTelegram()
-    await general_prom_tg(callback, text)
+async def prom_tg_parsing(callback):
+    text = msg_text.ListPromotionTelegramParsing().start()
+    await general_prom_tg(callback, text_start=text)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_4')
-async def prom_tg_newsletter(callback):
-    text = msg_text.ListPromotionTelegram()
-    await general_prom_tg(callback, text)
+async def prom_tg_pr(callback):
+    text = msg_text.ListPromotionTelegramPR().start()
+    await general_prom_tg(callback, text_start=text)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_5')
-async def prom_tg_newsletter(callback):
-    text = msg_text.ListPromotionTelegram()
-    await general_prom_tg(callback, text)
+async def prom_tg_cycle(callback):
+    text = msg_text.ListPromotionTelegramCycle().start()
+    await general_prom_tg(callback, text_start=text)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_6')
-async def prom_tg_newsletter(callback):
-    text = msg_text.ListPromotionTelegram()
-    await general_prom_tg(callback, text)
+async def prom_tg_comments(callback):
+    text = msg_text.ListPromotionTelegramComments().start()
+    await general_prom_tg(callback, text_start=text)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_7')
-async def prom_tg_newsletter(callback):
-    text = msg_text.ListPromotionTelegram()
-    await general_prom_tg(callback, text)
+async def prom_tg_complex(callback):
+    text = msg_text.ListPromotionTelegramComplex().start()
+    await general_prom_tg(callback, text_start=text)
 
 
-async def general_prom_tg(callback, text):
+async def general_prom_tg(callback, text_start, markup=None):
+    # text_menu = msg_text.prom_tg.main_menu()
     msg_text.prom_tg.category[callback.message.chat.id] = msg_text.prom_tg.all_categories[callback.data.split('_')[-1]]
     msg_text.prom_tg.flag_prom_tg[callback.message.chat.id] = True
     await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
-    msg = await bot.send_message(chat_id=callback.message.chat.id, text=text, reply_markup=markups.back_markup)
-    msg_text.prom_tg.msg_for_delete[callback.message.chat.id] = msg
+    if markup:
+        await bot.send_message(chat_id=callback.message.chat.id, text=text_start,
+                               reply_markup=markup)
+    else:
+        await bot.send_message(chat_id=callback.message.chat.id, text=text_start)
+
+    # msg = await bot.send_message(chat_id=callback.message.chat.id, text=text_menu, reply_markup=markups.back_markup)
+    # msg_text.prom_tg.msg_for_delete[callback.message.chat.id] = msg
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'sites')
@@ -348,10 +446,12 @@ async def design(callback):
 @bot.callback_query_handler(func=lambda callback: callback.data == 'pay_service')
 async def payment_of_services(callback):
     await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
-    await bot.send_invoice(chat_id=callback.message.chat.id, title='Оплата услуг',
-                           description='Тестовое описание товара', invoice_payload='payment_service',
-                           provider_token=config.YOO_TOKEN, currency='RUB', start_parameter='MarketingFreelance_bot',
-                           prices=[types.LabeledPrice(label='Оплата услуг', amount='100000')])
+    await services(callback.message)
+
+    # await bot.send_invoice(chat_id=callback.message.chat.id, title='Оплата услуг',
+    #                        description='Тестовое описание товара', invoice_payload='payment_service',
+    #                        provider_token=config.YOO_TOKEN, currency='RUB', start_parameter='MarketingFreelance_bot',
+    #                        prices=[types.LabeledPrice(label='Оплата услуг', amount='100000')])
 
 
 async def main():
