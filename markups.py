@@ -22,6 +22,7 @@ continue_markup.add(types.KeyboardButton(text='Далее'))
 admin_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 admin_markup.add(types.KeyboardButton(text='Рассылки сообщений'))
 admin_markup.add(types.KeyboardButton(text='Просмотр всех пользователей'))
+admin_markup.add(types.KeyboardButton(text='Личное сообщение от бота'))
 admin_markup.add(types.KeyboardButton(text='<< Вернуться назад'))
 
 '''back markup'''

@@ -25,6 +25,10 @@ class AdminUser(BaseMessages):
         self.flag_for_password = {}
         self.flag_account = {}
         self.flag_for_newsletter = {}
+        self.flag_for_write_user = {}
+        self.flag_for_private_msg = {}
+        self.user_to_send = {}
+        self.msg_to_send = {}
 
     def start(self):
         text = f'Вы вошли в аккаунт администратора\n' \
@@ -38,9 +42,26 @@ class AdminUser(BaseMessages):
                'Пароль: 0000'
         return text
 
+    def user_not_found(self):
+        text = 'Данный пользователь не подписан на бота'
+        return text
+
     def newsletter(self):
         text = 'Присылайе нам медиафайлы, документы и другие сообщения и они будут отправлены всем пользователям\n' \
                f'Нажмите кнопку "Стоп", если хотите прекратить рассылку'
+        return text
+
+    def send_private(self):
+        text = 'Присылайте нам сообщения, они будут отправлены пользователю\n' \
+               'После заполнения нажмите кнопку «Далее»'
+        return text
+
+    def success_sending_private(self):
+        text = 'Сообщения успешно отправлены'
+        return text
+
+    def write_username(self):
+        text = 'Введите имя пользователя в формате "@пользователь"'
         return text
 
     def success_newsletter(self):

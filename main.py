@@ -13,6 +13,18 @@ bot = telebot.async_telebot.AsyncTeleBot(config.BOT_TOKEN)
 '''Usual Functions'''
 
 
+def clear_admin_flags(message):
+    flags = (
+             'msg_text.admin.flag_for_write_user', 'msg_text.admin.flag_for_newsletter', 'msg_text.admin.user_to_send',
+             'msg_text.admin.flag_for_private_msg', 'msg_text.admin.msg_to_send'
+    )
+    for flag in flags:
+        try:
+            eval(f'{flag}.pop(message.chat.id)')
+        except KeyError:
+            pass
+
+
 def clear_flags(message, callback=False, not_delete=()):
     if callback:
         message = message.message
@@ -81,6 +93,7 @@ async def get_messages(message):
 
     # Base to start sending out messages to all users
     if msg_text.admin.flag_account.get(message.chat.id) and message.text == 'Рассылки сообщений':
+        clear_admin_flags(message)
         msg_text.admin.flag_for_newsletter[message.chat.id] = True
         text = msg_text.admin.newsletter()
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -96,13 +109,49 @@ async def get_messages(message):
     # Base to stop send out messages to users and to go over to main menu
     elif (msg_text.admin.flag_account.get(message.chat.id) and msg_text.admin.flag_for_newsletter.get(message.chat.id)
             and message.text == 'Стоп'):
-        del msg_text.admin.flag_for_newsletter[message.chat.id]
+        clear_admin_flags(message)
         text = msg_text.admin.success_newsletter()
         await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.admin_markup)
+
+    # Base to send a user to whom to send message
+    elif msg_text.admin.flag_account.get(message.chat.id) and message.text == 'Личное сообщение от бота':
+        clear_admin_flags(message)
+        msg_text.admin.flag_for_write_user[message.chat.id] = True
+        text = msg_text.admin.write_username()
+        await bot.send_message(chat_id=message.chat.id, text=text)
+
+    #
+    elif msg_text.admin.flag_account.get(message.chat.id) and msg_text.admin.flag_for_write_user.get(message.chat.id):
+        clear_admin_flags(message)
+        text = msg_text.admin.send_private()
+        msg_text.admin.flag_for_private_msg[message.chat.id] = True
+        msg_text.admin.user_to_send[message.chat.id] = message.text
+        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.continue_markup)
+
+    elif msg_text.admin.flag_for_private_msg.get(message.chat.id) and msg_text.admin.flag_account.get(message.chat.id):
+        if message.text != 'Далее':
+            msg_text.admin.msg_to_send[message.chat.id] = msg_text.admin.msg_to_send.get(message.chat.id, '') + '\n'\
+                                                          + message.text
+        else:
+            text = msg_text.admin.success_sending_private()
+            try:
+                user_id = models.db_object.db_select_user_id(msg_text.admin.user_to_send[message.chat.id][1:])
+            except Exception:
+                text = msg_text.admin.user_not_found()
+                await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.admin_markup)
+                clear_admin_flags(message)
+                return
+            await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.admin_markup)
+            await bot.send_message(chat_id=user_id,
+                                   text=msg_text.admin.msg_to_send[message.chat.id])
+            clear_admin_flags(message)
+
+
 
     # Base to see all users subscribed to bot
     elif msg_text.admin.flag_account.get(message.chat.id) and message.text == 'Просмотр всех пользователей':
         usernames = models.db_object.db_select_all_users()
+
         text = ''
         for user in usernames:
             text += f'<strong>Юзернейм:</strong> @{user[0]}\n'
@@ -143,7 +192,7 @@ async def get_messages(message):
         clear_flags(message, not_delete=('msg_text.base.flag_support',))
         msg_text.base.flag_support[message.chat.id] = True
         text = msg_text.base.support_start()
-        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.continue_markup)
+        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.back_continue_markup)
 
     # Texting message to support
     elif msg_text.base.flag_support.get(message.chat.id):
@@ -174,7 +223,7 @@ async def get_messages(message):
     # The answer from the first question
     elif msg_text.blog.flag_for_bloggers.get(message.chat.id):
         msg_text.base.category[message.chat.id] += '\nЧто Вы хотите рекламировать: ' + message.text
-        await send_msg(message, text_user=msg_text.blog.detail_product(), admins=(), markup=markups.continue_markup)
+        await send_msg(message, text_user=msg_text.blog.detail_product(), admins=(), markup=markups.back_continue_markup)
         msg_text.blog.flag_detail_product[message.chat.id] = True
 
     # The answer from the second question
@@ -333,7 +382,7 @@ async def develop_bots(callback):
     msg_text.dev_bots.flag_develop_bots[callback.message.chat.id] = True
     await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
     await bot.send_message(chat_id=callback.message.chat.id,
-                           text=text, reply_markup=markups.continue_markup)
+                           text=text, reply_markup=markups.back_continue_markup)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'bloggers')
