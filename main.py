@@ -101,10 +101,11 @@ async def get_messages(message):
         await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markup)
 
     # Sending out messages to all users
-    elif msg_text.admin.flag_for_newsletter.get(message.chat.id):
+    elif msg_text.admin.flag_for_newsletter.get(message.chat.id) and message.text != 'Стоп':
         users_id = models.db_object.db_select_all_users_id()
         for chat_id in users_id:
-            await bot.forward_message(chat_id[0], message.chat.id, message.message_id)
+            if message.text:
+                await bot.send_message(chat_id=chat_id[0], text=message.text)
 
     # Base to stop send out messages to users and to go over to main menu
     elif (msg_text.admin.flag_account.get(message.chat.id) and msg_text.admin.flag_for_newsletter.get(message.chat.id)
@@ -120,7 +121,7 @@ async def get_messages(message):
         text = msg_text.admin.write_username()
         await bot.send_message(chat_id=message.chat.id, text=text)
 
-    #
+    # Getting the user to send private message
     elif msg_text.admin.flag_account.get(message.chat.id) and msg_text.admin.flag_for_write_user.get(message.chat.id):
         clear_admin_flags(message)
         text = msg_text.admin.send_private()
@@ -128,6 +129,7 @@ async def get_messages(message):
         msg_text.admin.user_to_send[message.chat.id] = message.text
         await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.continue_markup)
 
+    # Sending private message to user
     elif msg_text.admin.flag_for_private_msg.get(message.chat.id) and msg_text.admin.flag_account.get(message.chat.id):
         if message.text != 'Далее':
             msg_text.admin.msg_to_send[message.chat.id] = msg_text.admin.msg_to_send.get(message.chat.id, '') + '\n'\
@@ -145,8 +147,6 @@ async def get_messages(message):
             await bot.send_message(chat_id=user_id,
                                    text=msg_text.admin.msg_to_send[message.chat.id])
             clear_admin_flags(message)
-
-
 
     # Base to see all users subscribed to bot
     elif msg_text.admin.flag_account.get(message.chat.id) and message.text == 'Просмотр всех пользователей':
@@ -212,9 +212,12 @@ async def get_messages(message):
         if message.text != 'Далее':
             msg_text.base.category[message.chat.id] += f'\n{message.text}'
         else:
-            text_admin = msg_text.base.category.get(message.chat.id)
-            await send_msg(message=message, text_user=msg_text.dev_bots.finish(), text_admin=text_admin,
-                           markup=markups.main_markup)
+            await bot.send_invoice(chat_id=message.chat.id, title='Оплата за разработку ботов',
+                                   description='Тестовое описание товара',
+                                   invoice_payload='payment_develop_bots',
+                                   provider_token=config.YOO_TOKEN, currency='RUB',
+                                   start_parameter='MarketingFreelance_bot',
+                                   prices=[types.LabeledPrice(label='Оплата за разработку ботов', amount=f'500000')])
 
     # -------------------------------
     #   Service of ad from bloggers
@@ -333,15 +336,41 @@ async def newsletter(message):
     if msg_text.admin.flag_for_newsletter.get(message.chat.id):
         users_id = models.db_object.db_select_all_users_id()
         for chat_id in users_id:
-            await bot.forward_message(chat_id[0], message.chat.id, message.message_id)
+            if message.sticker:
+                await bot.send_sticker(chat_id=chat_id[0], sticker=message.sticker.file_id)
+            if message.photo:
+                await bot.send_photo(chat_id=chat_id[0], photo=message.json['photo'][0]['file_id'])
+            if message.location and not message.venue:
+                await bot.send_location(chat_id=chat_id[0], longitude=message.location.longitude,
+                                        latitude=message.location.latitude)
+            if message.venue:
+                await bot.send_venue(chat_id=chat_id[0], longitude=message.location.longitude,
+                                     latitude=message.location.latitude, title=message.venue.title,
+                                     address=message.venue.address)
+            if message.video:
+                await bot.send_video(chat_id=chat_id[0], video=message.video.file_id,
+                                     )
+            if message.voice:
+                await bot.send_voice(chat_id=chat_id[0], voice=message.voice.file_id)
+            if message.contact:
+                await bot.send_contact(chat_id=chat_id[0], phone_number=message.contact.phone_number,
+                                       first_name=message.contact.first_name,
+                                       last_name=message.contact.last_name)
 
 
 @bot.message_handler(content_types=['successful_payment'])
 async def process_pay(message):
-    if message.successful_payment.invoice_payload == 'payment_prom_tg_newsletters':
-        text_user = msg_text.ListPromotionTelegramNewsletter().success_payment()
+    text_user = msg_text.ListPromotionTelegramNewsletter().success_payment()
+    if message.successful_payment.invoice_payload in ['payment_prom_tg_newsletters', 'payment_develop_bots']:
         text_admin = msg_text.base.category.get(message.chat.id) + '\n' + '<strong>Оплата</strong>: успешно'
         await send_msg(message, text_user=text_user, text_admin=text_admin)
+    elif message.successful_payment.invoice_payload == 'payment_site_design':
+        file_id = msg_text.base.category.get(message.chat.id).split('\n')[-1]
+        text_admin = '\n'.join(msg_text.base.category.get(message.chat.id).split('\n')[:-1]) + '\n'\
+                     + '<strong>Оплата</strong>: успешно'
+        await send_msg(message, text_user=text_user, text_admin=text_admin)
+        await bot.send_document(chat_id=config.ADMINS['sourr_cream'], document=file_id)  # qzark
+        await bot.send_document(chat_id=config.ADMINS['sourr_cream'], document=file_id)  # decotto
 
 
 @bot.message_handler(content_types=['document'])
@@ -349,16 +378,20 @@ async def get_docs(message):
     if msg_text.site.flag_sites.get(message.chat.id) or msg_text.design_obj.flag_design.get(message.chat.id):
         msg_text.site.send_doc[message.chat.id] = True
         msg_text.design_obj.send_doc[message.chat.id] = True
-        text = msg_text.site.finish()
-        category = msg_text.base.category.get(message.chat.id)
-        text_category = f'<strong>{category}</strong>\n'
-        await send_msg(message, text_user=text, text_admin=text_category)
-        await bot.send_document(chat_id=config.ADMINS['sourr_cream'], document=message.document.file_id)  # qzark
-        await bot.send_document(chat_id=config.ADMINS['sourr_cream'], document=message.document.file_id)  # decotto
+        category = 'создания сайта' if 'Создание сайтов' in msg_text.base.category.get(message.chat.id)\
+            else 'дизайнерскую работу'
+        await bot.send_invoice(chat_id=message.chat.id, title=f'Оплата за {category}',
+                               description='Тестовое описание товара',
+                               invoice_payload='payment_site_design',
+                               provider_token=config.YOO_TOKEN, currency='RUB',
+                               start_parameter='MarketingFreelance_bot',
+                               prices=[types.LabeledPrice(label=f'Оплата за {category}', amount=f'500000')])
+        msg_text.base.category[message.chat.id] += '\n' + message.document.file_id
     elif msg_text.admin.flag_for_newsletter.get(message.chat.id):
         users_id = models.db_object.db_select_all_users_id()
         for chat_id in users_id:
-            await bot.forward_message(chat_id[0], message.chat.id, message.message_id)
+            if message.document:
+                await bot.send_document(chat_id=chat_id[0], document=message.document.file_id)
     else:
         await send_msg(message=message, text_user=msg_text.base.unknown(), admins=())
     clear_flags(message)
@@ -416,7 +449,6 @@ async def prom_tg_newsletter_want(callback):
     text = msg_text.ListPromotionTelegramNewsletter().press_yes()
     await bot.send_message(chat_id=callback.message.chat.id, text=text,
                            reply_markup=markups.back_continue_markup)
-
 
 
 @bot.callback_query_handler(func=lambda callback: 'prom_tg_1_number' in callback.data)

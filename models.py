@@ -11,11 +11,12 @@ class UserData:
         cursor = conn.cursor()
         username = message.from_user.username
         val = (username, message.chat.id)
-        sql_query = f'SELECT username FROM {config.DB_TABLE}'
-        cursor.execute(sql_query)
+        sql_query = f'SELECT username FROM {config.DB_TABLE} WHERE user_id = %s'
+        cursor.execute(sql_query, (message.chat.id,))
+
         if cursor.fetchall():
             return
-        sql_query = f'INSERT INTO {config.DB_TABLE} ("username", "user_id") VALUES (%s, %s)'
+        sql_query = f'INSERT INTO {config.DB_TABLE} ("username", user_id) VALUES (%s, %s)'
         cursor.execute(sql_query, val)
         conn.commit()
 
