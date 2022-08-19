@@ -88,7 +88,7 @@ class Basement:
 
     def about(self):
         text = 'Пожалуй самый легкий способ заказать качественные услуги.\n' \
-               '<small><small>Пользуясь сервисом вы соглашаетесь с обработкой ваших данных </small></small>'
+               'Пользуясь сервисом вы соглашаетесь с обработкой ваших данных'
         return text
 
     def support_start(self):
@@ -105,6 +105,10 @@ class Basement:
 
     def success_pay(self):
         text = 'Оплата прошла успешно!'
+        return text
+
+    def back_to_menu(self):
+        text = 'Вернуться в главное меню'
         return text
 
     def unknown(self):
