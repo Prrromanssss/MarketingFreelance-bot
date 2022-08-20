@@ -10,7 +10,7 @@ ADMINS = {
           'sourr_cream': 1921020697,
           'zakazy': -1001627991920,
          }
-ADMIN_PASSWORD = '0000'
+ADMIN_PASSWORD = 'ZmGt469jh'
 CONTENT_TYPES = ['text', 'audio', 'photo',
                  'sticker', 'video', 'video_note', 'voice',
                  'location', 'contact', 'venue']

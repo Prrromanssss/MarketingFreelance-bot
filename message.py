@@ -38,8 +38,7 @@ class AdminUser(BaseMessages):
         return text
 
     def write_password(self):
-        text = 'Введите пароль, чтобы войти в качестве админа\n' \
-               'Пароль: 0000'
+        text = 'Введите пароль, чтобы войти в качестве админа\n'
         return text
 
     def user_not_found(self):
