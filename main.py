@@ -371,7 +371,7 @@ async def newsletter(message):
 
 @bot.message_handler(content_types=['document'])
 async def get_docs(message):
-    await bot.send_message(message.chat.id, text=message.document.file_id)
+    await bot.send_message(chat_id=message.chat.id, text=message.document.file_id)
     if msg_text.site.flag_sites.get(message.chat.id) or msg_text.design_obj.flag_design.get(message.chat.id):
         msg_text.site.send_doc[message.chat.id] = True
         msg_text.design_obj.send_doc[message.chat.id] = True
