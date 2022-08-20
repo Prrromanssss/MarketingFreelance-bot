@@ -48,7 +48,7 @@ services_markup.add(types.InlineKeyboardButton(text='Дизайн', callback_dat
 
 '''promotion telegram markup'''
 prom_tg_markup = types.InlineKeyboardMarkup(row_width=3)
-# prom_tg_markup.add(types.InlineKeyboardButton(text='Рассылки в Telegram', callback_data='prom_tg_1'))
+prom_tg_markup.add(types.InlineKeyboardButton(text='Рассылки в Telegram', callback_data='prom_tg_1'))
 prom_tg_markup.add(types.InlineKeyboardButton(text='Инвайт в группы', callback_data='prom_tg_2'))
 prom_tg_markup.add(types.InlineKeyboardButton(text='Парсинг подписчиков', callback_data='prom_tg_3'))
 prom_tg_markup.add(types.InlineKeyboardButton(text='PR компании', callback_data='prom_tg_4'))

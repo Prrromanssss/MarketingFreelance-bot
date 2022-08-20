@@ -8,7 +8,7 @@ ADMINS = {
           'qzark': 1876519381,
           'decotto': 944048397,
           'sourr_cream': 1921020697,
-          'zakazy': -1001627991920
+          'zakazy': -1001627991920,
          }
 ADMIN_PASSWORD = '0000'
 CONTENT_TYPES = ['text', 'audio', 'photo',

@@ -45,7 +45,7 @@ def clear_flags(message, callback=False, not_delete=()):
                 pass
 
 
-async def send_msg(message, text_user, text_admin=None, admins=('qzark', 'decotto'), markup=None):
+async def send_msg(message, text_user, text_admin=None, admins=('qzark', 'zakazy'), markup=None):
     clear_flags(message)
     if markup:
         await bot.send_message(chat_id=message.chat.id, text=text_user, reply_markup=markup, parse_mode='html')
@@ -212,12 +212,9 @@ async def get_messages(message):
         if message.text != 'Далее':
             msg_text.base.category[message.chat.id] += f'\n{message.text}'
         else:
-            await bot.send_invoice(chat_id=message.chat.id, title='Оплата за разработку ботов',
-                                   description='Тестовое описание товара',
-                                   invoice_payload='payment_develop_bots',
-                                   provider_token=config.YOO_TOKEN, currency='RUB',
-                                   start_parameter='MarketingFreelance_bot',
-                                   prices=[types.LabeledPrice(label='Оплата за разработку ботов', amount=f'500000')])
+            text_admin = msg_text.base.category[message.chat.id]
+            await send_msg(message=message, text_user=msg_text.dev_bots.finish(),
+                           text_admin=text_admin, markup=markups.main_markup)
 
     # -------------------------------
     #   Service of ad from bloggers
@@ -361,17 +358,11 @@ async def newsletter(message):
 
 @bot.message_handler(content_types=['successful_payment'])
 async def process_pay(message):
-    text_user = msg_text.ListPromotionTelegramNewsletter().success_payment()
-    if message.successful_payment.invoice_payload in ['payment_prom_tg_newsletters', 'payment_develop_bots']:
+
+    if message.successful_payment.invoice_payload == 'payment_prom_tg_newsletters':
+        text_user = msg_text.ListPromotionTelegramNewsletter().success_payment()
         text_admin = msg_text.base.category.get(message.chat.id) + '\n' + '<strong>Оплата</strong>: успешно'
         await send_msg(message, text_user=text_user, text_admin=text_admin, markup=markups.main_markup)
-    elif message.successful_payment.invoice_payload == 'payment_site_design':
-        file_id = msg_text.base.category.get(message.chat.id).split('\n')[-1]
-        text_admin = '\n'.join(msg_text.base.category.get(message.chat.id).split('\n')[:-1]) + '\n'\
-                     + '<strong>Оплата</strong>: успешно'
-        await send_msg(message, text_user=text_user, text_admin=text_admin, markup=markups.main_markup)
-        await bot.send_document(chat_id=config.ADMINS['qzark'], document=file_id)  # qzark
-        await bot.send_document(chat_id=config.ADMINS['decotto'], document=file_id)  # decotto
 
 
 @bot.message_handler(content_types=['document'])
@@ -379,16 +370,13 @@ async def get_docs(message):
     if msg_text.site.flag_sites.get(message.chat.id) or msg_text.design_obj.flag_design.get(message.chat.id):
         msg_text.site.send_doc[message.chat.id] = True
         msg_text.design_obj.send_doc[message.chat.id] = True
-        category = 'создания сайта' if 'Создание сайтов' in msg_text.base.category.get(message.chat.id)\
-            else 'дизайнерскую работу'
-        await bot.send_invoice(chat_id=message.chat.id, title=f'Оплата за {category}',
-                               description='Тестовое описание товара',
-                               invoice_payload='payment_site_design',
-                               provider_token=config.YOO_TOKEN, currency='RUB',
-                               start_parameter='MarketingFreelance_bot',
-                               prices=[types.LabeledPrice(label=f'Оплата за {category}', amount=f'500000')])
+        text_user = msg_text.site.finish()
+        category = msg_text.base.category.get(message.chat.id)
+        text_category = f'<strong>{category}</strong>\n'
+        await send_msg(message, text_user=text_user, text_admin=text_category, markup=markups.main_markup)
+        await bot.send_document(chat_id=config.ADMINS['qzark'], document=message.document.file_id)  # qzark
+        await bot.send_document(chat_id=config.ADMINS['zakazy'], document=message.document.file_id)  # zakazy
 
-        msg_text.base.category[message.chat.id] += '\n' + message.document.file_id
     elif msg_text.admin.flag_for_newsletter.get(message.chat.id):
         users_id = models.db_object.db_select_all_users_id()
         for chat_id in users_id:
