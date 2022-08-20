@@ -167,6 +167,7 @@ class PromotionTelegram(BaseMessages, Finish):
                   '5': 'Циклические публикации в чатах', '6': 'Посев нативных комментариев',
                   '7': 'Комплексное продвижение'
                  }
+        self.complex_href, self.complex_contact = {}, {}
 
     def start(self):
         text = 'Если вам нужно продвинуть ваши товары/услуги в telegram, то Вы обратились по адресу'
@@ -233,7 +234,19 @@ class ListPromotionTelegramComments(BaseMessages, Finish):
 
 class ListPromotionTelegramComplex(BaseMessages, Finish):
     def start(self):
-        text = 'complex'
+        text = 'Заказывая <strong>комплексное продвижение в telegram</strong>,' \
+               ' вы получаете все инструменты от изучения вашей' \
+               ' ниши до разработки стратегии, построении воронки продаж и обработки заявок.\n\n'\
+               'Мы используем все доступные инструменты и алгоритмы продвижения для привлечения клиентов.\n\n ' \
+               'Стоимость <strong>от 40000₽/месяц</strong>'
+        return text
+
+    def href(self):
+        text = 'Пришлите ссылку на ваш проект'
+        return text
+
+    def contact(self):
+        text = 'Пришлите ваши контакты'
         return text
 
 

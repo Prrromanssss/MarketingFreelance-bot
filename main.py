@@ -36,6 +36,7 @@ def clear_flags(message, callback=False, not_delete=()):
              'msg_text.blog.flag_for_bloggers', 'msg_text.blog.flag_detail_product', 'msg_text.blog.flag_aim',
              'msg_text.blog.flag_budget', 'msg_text.admin.flag_for_password', 'msg_text.prom_tg.msg_for_delete',
              'msg_text.prom_tg.flag_prom_tg', 'msg_text.prom_tg.newsletter', 'msg_text.prom_tg.number_newsletter',
+             'msg_text.prom_tg.complex_href', 'msg_text.prom_tg.complex_contact'
              )
     for flag in flags:
         if flag not in not_delete:
@@ -291,6 +292,20 @@ async def get_messages(message):
             text = msg_text.ListPromotionTelegramNewsletter().number()
             await send_msg(message, text_user=text, admins=(), markup=markups.prom_tg_newsletter_number_markup)
 
+    # Complex to get href from promotion telegram
+    elif msg_text.prom_tg.complex_href.get(message.chat.id):
+        text = msg_text.ListPromotionTelegramComplex().contact()
+        msg_text.base.category[message.chat.id] += '\nСсылка на проект: ' + f'{message.text}'
+        await send_msg(message, text_user=text, admins=())
+        msg_text.prom_tg.complex_contact[message.chat.id] = True
+
+    # Complex to get contact from promotion telegram
+    elif msg_text.prom_tg.complex_contact.get(message.chat.id):
+        text = msg_text.ListPromotionTelegramComplex().finish()
+        msg_text.base.category[message.chat.id] += '\nКонтакты: ' + f'{message.text}'
+        text_admin = msg_text.base.category[message.chat.id]
+        await send_msg(message, text_user=text, text_admin=text_admin, markup=markups.main_markup)
+
     # ------------------------------------------------------------------------
     #   Service of creating sites and design (they have the same functional)
     # ------------------------------------------------------------------------
@@ -516,7 +531,16 @@ async def prom_tg_cycle_comments_want(callback):
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_7')
 async def prom_tg_complex(callback):
     text = msg_text.ListPromotionTelegramComplex().start()
-    await general_prom_tg(callback, text_start=text)
+    await general_prom_tg(callback, text_start=text, markup=markups.prom_tg_complex_markup)
+
+
+@bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_7_want')
+async def prom_tg_complex_want(callback):
+    msg_text.base.category[callback.message.chat.id] += '\nКлиент хочет заказать консультацию'
+    text = msg_text.ListPromotionTelegramComplex().href()
+    await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
+    await send_msg(callback.message, text_user=text, admins=())
+    msg_text.prom_tg.complex_href[callback.message.chat.id] = True
 
 
 async def general_prom_tg(callback, text_start, markup=None):
@@ -525,9 +549,9 @@ async def general_prom_tg(callback, text_start, markup=None):
     await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
     if markup:
         msg = await bot.send_message(chat_id=callback.message.chat.id, text=text_start,
-                                     reply_markup=markup)
+                                     reply_markup=markup, parse_mode='html')
     else:
-        msg = await bot.send_message(chat_id=callback.message.chat.id, text=text_start)
+        msg = await bot.send_message(chat_id=callback.message.chat.id, text=text_start, parse_mode='html')
 
     msg_text.prom_tg.msg_for_delete[callback.message.chat.id] = msg
 
