@@ -197,12 +197,10 @@ async def get_messages(message):
 
     # Texting message to support
     elif msg_text.base.flag_support.get(message.chat.id):
-        if message.text != 'Далее':
-            msg_text.base.category[message.chat.id] = msg_text.base.category.get(message.chat.id) + '\n' + message.text
-        else:
-            text_admin = msg_text.base.category[message.chat.id]
-            await send_msg(message=message, text_user=msg_text.base.support_finish(),
-                           text_admin=text_admin, markup=markups.main_markup)
+        msg_text.base.category[message.chat.id] = msg_text.base.category.get(message.chat.id) + '\n' + message.text
+        text_admin = msg_text.base.category[message.chat.id]
+        await send_msg(message=message, text_user=msg_text.base.support_finish(),
+                       text_admin=text_admin, markup=markups.main_markup)
 
     # ------------------------------
     #   Service of developing bots
@@ -373,6 +371,7 @@ async def newsletter(message):
 
 @bot.message_handler(content_types=['document'])
 async def get_docs(message):
+    await bot.send_message(message.chat.id, text=message.document.file_id)
     if msg_text.site.flag_sites.get(message.chat.id) or msg_text.design_obj.flag_design.get(message.chat.id):
         msg_text.site.send_doc[message.chat.id] = True
         msg_text.design_obj.send_doc[message.chat.id] = True
