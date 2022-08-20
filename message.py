@@ -192,11 +192,6 @@ class ListPromotionTelegramNewsletter(BaseMessages, Finish):
         return text
 
 
-    def success_payment(self):
-        text = 'Спасибо за заказ.\nНаш менеджер свяжется с вами'
-        return text
-
-
 class ListPromotionTelegramInvite(BaseMessages, Finish):
     def start(self):
         text = 'С помощью данной услуги вы сможете собрать и подписать на свою группу подписчиков интересующих вас чатов'

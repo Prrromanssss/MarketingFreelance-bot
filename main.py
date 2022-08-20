@@ -356,15 +356,6 @@ async def newsletter(message):
                                        last_name=message.contact.last_name)
 
 
-@bot.message_handler(content_types=['successful_payment'])
-async def process_pay(message):
-
-    if message.successful_payment.invoice_payload == 'payment_prom_tg_newsletters':
-        text_user = msg_text.ListPromotionTelegramNewsletter().success_payment()
-        text_admin = msg_text.base.category.get(message.chat.id) + '\n' + '<strong>Оплата</strong>: успешно'
-        await send_msg(message, text_user=text_user, text_admin=text_admin, markup=markups.main_markup)
-
-
 @bot.message_handler(content_types=['document'])
 async def get_docs(message):
     if msg_text.site.flag_sites.get(message.chat.id) or msg_text.design_obj.flag_design.get(message.chat.id):
@@ -385,14 +376,6 @@ async def get_docs(message):
     else:
         await send_msg(message=message, text_user=msg_text.base.unknown(), admins=())
     clear_flags(message)
-
-
-'''Payments handlers'''
-
-
-@bot.pre_checkout_query_handler(func=lambda query: True)
-async def process_pre_checkout_query(pre_checkout_query):
-    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
 
 
 '''Callback handlers'''
@@ -456,26 +439,17 @@ async def prom_tg_newsletter_number(callback):
                                                                    + msg_text.prom_tg.number_newsletter[callback.message.chat.id]
         await bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text,
                                     reply_markup=markups.prom_tg_newsletter_inp_last_number_markup)
-    elif 'last' in callback.data:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
-        await calculate_payment(callback.message, msg_text.prom_tg.number_newsletter[callback.message.chat.id])
     else:
         await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
-        await calculate_payment(callback.message, numbers[callback.data.split('_')[-1]])
-
-
-async def calculate_payment(message, number):
-    if int(number) < 5000:
-        number = str(int(int(number) * 2.5))
-    elif 5000 <= int(number) < 10000:
-        number = str(int(number) * 2)
-    elif int(number) >= 10000:
-        number = str(int(int(number) * 1.5))
-    print(number)
-    await bot.send_invoice(chat_id=message.chat.id, title='Оплата рассылок',
-                           description='Тестовое описание товара', invoice_payload='payment_prom_tg_newsletters',
-                           provider_token=config.YOO_TOKEN, currency='RUB', start_parameter='MarketingFreelance_bot',
-                           prices=[types.LabeledPrice(label='Оплата рассылок', amount=f'{number}00')])
+        if 'last' in callback.data:
+            msg_text.base.category[callback.message.chat.id] += '\nКоличество сообщений: '\
+                                                             + msg_text.prom_tg.number_newsletter[callback.message.chat.id]
+        else:
+            msg_text.base.category[callback.message.chat.id] += '\nКоличество сообщений: '\
+                                                                + numbers[callback.data.split('_')[-1]]
+        text_user = msg_text.ListPromotionTelegramNewsletter().finish()
+        text_admin = msg_text.base.category.get(callback.message.chat.id)
+        await send_msg(callback.message, text_user=text_user, text_admin=text_admin, markup=markups.main_markup)
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'prom_tg_1_sup')
