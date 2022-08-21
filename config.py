@@ -1,8 +1,7 @@
 BOT_TOKEN = '5457503143:AAGhF9CXAwR_glGChl1Wc5XualyftSvxAAw'
 APP_URL = 'https://marketingfreelancebot.herokuapp.com/' + BOT_TOKEN
 YOO_TOKEN = '381764678:TEST:41271'
-DB_URI = 'postgres://tmwvgjjllbewwt:1610feff8e0c0135497be442e975187cbc5a54c0b4c057d5c4c4ca21623973fa@ec2-52-49-120-150' \
-         '.eu-west-1.compute.amazonaws.com:5432/da8ad5nc7apsu5'
+DB_URI = 'postgres://rvgsbptiqlsevz:845dad5d5ac100fada823c5556d013691c8f077164ef8006cb349c8ddc41adbd@ec2-54-246-185-161.eu-west-1.compute.amazonaws.com:5432/demi7gc6r35uof'
 DB_TABLE = 'db_users'
 ADMINS = {
           'qzark': 1876519381,
