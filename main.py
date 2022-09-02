@@ -36,7 +36,8 @@ def clear_flags(message, callback=False, not_delete=()):
              'msg_text.blog.flag_for_bloggers', 'msg_text.blog.flag_detail_product', 'msg_text.blog.flag_aim',
              'msg_text.blog.flag_budget', 'msg_text.admin.flag_for_password', 'msg_text.prom_tg.msg_for_delete',
              'msg_text.prom_tg.flag_prom_tg', 'msg_text.prom_tg.newsletter', 'msg_text.prom_tg.number_newsletter',
-             'msg_text.prom_tg.complex_href', 'msg_text.prom_tg.complex_contact'
+             'msg_text.prom_tg.complex_href', 'msg_text.prom_tg.complex_contact', 'msg_text.reg_user.dialog_support',
+             'msg_text.admin.flag_for_private_msg'
              )
     for flag in flags:
         if flag not in not_delete:
@@ -128,15 +129,17 @@ async def get_messages(message):
         text = msg_text.admin.send_private()
         msg_text.admin.flag_for_private_msg[message.chat.id] = True
         msg_text.admin.user_to_send[message.chat.id] = message.text
-        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.continue_markup)
+        try:
+            user_id = models.db_object.db_select_user_id(msg_text.admin.user_to_send[message.chat.id][1:])
+        except Exception:
+            user_id = '-'
+        msg_text.reg_user.dialog_support[user_id] = True
+
+        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.close_the_dialog_markup)
 
     # Sending private message to user
     elif msg_text.admin.flag_for_private_msg.get(message.chat.id) and msg_text.admin.flag_account.get(message.chat.id):
-        if message.text != 'Далее':
-            msg_text.admin.msg_to_send[message.chat.id] = msg_text.admin.msg_to_send.get(message.chat.id, '') + '\n'\
-                                                          + message.text
-        else:
-            text = msg_text.admin.success_sending_private()
+        if message.text != 'Закрыть диалог':
             try:
                 user_id = models.db_object.db_select_user_id(msg_text.admin.user_to_send[message.chat.id][1:])
             except Exception:
@@ -144,10 +147,18 @@ async def get_messages(message):
                 await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.admin_markup)
                 clear_admin_flags(message)
                 return
-            await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.admin_markup)
             await bot.send_message(chat_id=user_id,
-                                   text=msg_text.admin.msg_to_send[message.chat.id])
+                                   text=message.text, reply_markup=markups.close_the_dialog_markup)
+        else:
+            text_admin = msg_text.admin.admin_close_dialog()
+            user_id = models.db_object.db_select_user_id(msg_text.admin.user_to_send[message.chat.id][1:])
+            await bot.send_message(chat_id=message.chat.id, text=text_admin, reply_markup=markups.admin_markup)
+            await bot.send_message(chat_id=user_id, text=text_admin, reply_markup=markups.main_markup)
             clear_admin_flags(message)
+            try:
+                del msg_text.reg_user.dialog_support[user_id]
+            except Exception:
+                pass
 
     # Base to see all users subscribed to bot
     elif msg_text.admin.flag_account.get(message.chat.id) and message.text == 'Просмотр всех пользователей':
@@ -169,6 +180,21 @@ async def get_messages(message):
     # -----------------------
     #   Usual user basement
     # -----------------------
+    # The dialog with the support
+    elif msg_text.reg_user.dialog_support.get(message.chat.id):
+        if message.text != 'Закрыть диалог':
+            text = message.text
+            await bot.send_message(chat_id=config.ADMINS['sourr_cream'],
+                                   text=text, reply_markup=markups.close_the_dialog_markup, parse_mode='html')
+            # await bot.send_message(chat_id=config.ADMINS['zakazy'],
+            #                        text=text, reply_markup=markups.close_the_dialog_markup, parse_mode='html')
+        else:
+            text_user = msg_text.reg_user.reg_user_close_dialog()
+            await bot.send_message(chat_id=message.chat.id, text=text_user, reply_markup=markups.main_markup)
+            text_user = f'Юзернейм: @{message.from_user.username}\n закрыл диалог'
+            await bot.send_message(chat_id=config.ADMINS['qzark'], text=text_user, reply_markup=markups.admin_markup)
+            await bot.send_message(chat_id=config.ADMINS['zakazy'], text=text_user, reply_markup=markups.admin_markup)
+            clear_admin_flags(message)
 
     # Base to see variants of payments
     elif message.text == 'Оплата услуг':
@@ -193,7 +219,7 @@ async def get_messages(message):
         clear_flags(message, not_delete=('msg_text.base.flag_support',))
         msg_text.base.flag_support[message.chat.id] = True
         text = msg_text.base.support_start()
-        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.continue_markup)
+        await bot.send_message(chat_id=message.chat.id, text=text, reply_markup=markups.clean_markup)
 
     # Texting message to support
     elif msg_text.base.flag_support.get(message.chat.id):

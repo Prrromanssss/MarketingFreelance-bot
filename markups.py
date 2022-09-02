@@ -34,6 +34,10 @@ back_continue_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 back_continue_markup.add(types.KeyboardButton(text='Далее'))
 back_continue_markup.add(types.KeyboardButton(text='<< Назад'))
 
+'''close the dialog'''
+close_the_dialog_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+close_the_dialog_markup.add(types.KeyboardButton(text='Закрыть диалог'))
+
 '''--------------------'''
 '''InlineKeyboardMarkup'''
 '''--------------------'''
@@ -116,5 +120,6 @@ prom_tg_newsletter_inp_last_number_markup.add(types.InlineKeyboardButton(text='�
 prom_tg_complex_markup = types.InlineKeyboardMarkup()
 prom_tg_complex_markup.add(types.InlineKeyboardButton(text='Заказать услугу', callback_data='prom_tg_7_want'))
 prom_tg_complex_markup.add(types.InlineKeyboardButton(text='Вернуться к списку услуг',
-                                                             callback_data='promotion_telegram'))
+                                                      callback_data='promotion_telegram'))
+
 
