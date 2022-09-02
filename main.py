@@ -184,7 +184,7 @@ async def get_messages(message):
     elif msg_text.reg_user.dialog_support.get(message.chat.id):
         if message.text != 'Закрыть диалог':
             text = message.text
-            await bot.send_message(chat_id=config.ADMINS['sourr_cream'],
+            await bot.send_message(chat_id=config.ADMINS['qzark'],
                                    text=text, reply_markup=markups.close_the_dialog_markup, parse_mode='html')
             # await bot.send_message(chat_id=config.ADMINS['zakazy'],
             #                        text=text, reply_markup=markups.close_the_dialog_markup, parse_mode='html')
