@@ -1,13 +1,14 @@
 import asyncio
+
 import telebot.async_telebot
-import config
-import message as msg_text
 from telebot import types
+
 import markups
+import message as msg_text
 import models
+import settings
 
-
-bot = telebot.async_telebot.AsyncTeleBot(config.BOT_TOKEN)
+bot = telebot.async_telebot.AsyncTeleBot(settings.BOT_TOKEN)
 
 
 '''Usual Functions'''
@@ -15,8 +16,11 @@ bot = telebot.async_telebot.AsyncTeleBot(config.BOT_TOKEN)
 
 def clear_admin_flags(message):
     flags = (
-             'msg_text.admin.flag_for_write_user', 'msg_text.admin.flag_for_newsletter', 'msg_text.admin.user_to_send',
-             'msg_text.admin.flag_for_private_msg', 'msg_text.admin.msg_to_send'
+             'msg_text.admin.flag_for_write_user',
+             'msg_text.admin.flag_for_newsletter',
+             'msg_text.admin.user_to_send',
+             'msg_text.admin.flag_for_private_msg',
+             'msg_text.admin.msg_to_send',
     )
     for flag in flags:
         try:
@@ -55,7 +59,7 @@ async def send_msg(message, text_user, text_admin=None, admins=('qzark', 'zakazy
         await bot.send_message(chat_id=message.chat.id, text=text_user, parse_mode='html')
     text_admin = f'Юзернейм: @{models.db_object.db_select_user(message)}\n{text_admin}'
     for admin in admins:
-        await bot.send_message(chat_id=config.ADMINS[admin], text=text_admin, parse_mode='html')
+        await bot.send_message(chat_id=settings.ADMINS[admin], text=text_admin, parse_mode='html')
 
 
 async def services(message):
@@ -184,16 +188,16 @@ async def get_messages(message):
     elif msg_text.reg_user.dialog_support.get(message.chat.id):
         if message.text != 'Закрыть диалог':
             text = message.text
-            await bot.send_message(chat_id=config.ADMINS['qzark'],
+            await bot.send_message(chat_id=settings.ADMINS['qzark'],
                                    text=text, reply_markup=markups.close_the_dialog_markup, parse_mode='html')
-            # await bot.send_message(chat_id=config.ADMINS['zakazy'],
+            # await bot.send_message(chat_id=settings.ADMINS['zakazy'],
             #                        text=text, reply_markup=markups.close_the_dialog_markup, parse_mode='html')
         else:
             text_user = msg_text.reg_user.reg_user_close_dialog()
             await bot.send_message(chat_id=message.chat.id, text=text_user, reply_markup=markups.main_markup)
             text_user = f'Юзернейм: @{message.from_user.username}\n закрыл диалог'
-            await bot.send_message(chat_id=config.ADMINS['qzark'], text=text_user, reply_markup=markups.admin_markup)
-            await bot.send_message(chat_id=config.ADMINS['zakazy'], text=text_user, reply_markup=markups.admin_markup)
+            await bot.send_message(chat_id=settings.ADMINS['qzark'], text=text_user, reply_markup=markups.admin_markup)
+            await bot.send_message(chat_id=settings.ADMINS['zakazy'], text=text_user, reply_markup=markups.admin_markup)
             clear_admin_flags(message)
 
     # Base to see variants of payments
@@ -351,7 +355,7 @@ async def get_messages(message):
 
     # Compare input to password
     elif msg_text.admin.flag_for_password.get(message.chat.id):
-        if config.ADMIN_PASSWORD == message.text:
+        if settings.ADMIN_PASSWORD == message.text:
             clear_flags(message)
             await bot.send_message(chat_id=message.chat.id, text=msg_text.admin.start(),
                                    reply_markup=markups.admin_markup)
@@ -368,7 +372,7 @@ async def get_messages(message):
         await send_msg(message=message, text_user=msg_text.base.unknown(), admins=())
 
 
-@bot.message_handler(content_types=config.CONTENT_TYPES)
+@bot.message_handler(content_types=settings.CONTENT_TYPES)
 async def newsletter(message):
     if msg_text.admin.flag_for_newsletter.get(message.chat.id):
         users_id = models.db_object.db_select_all_users_id()
@@ -404,8 +408,8 @@ async def get_docs(message):
         category = msg_text.base.category.get(message.chat.id)
         text_category = f'<strong>{category}</strong>\n'
         await send_msg(message, text_user=text_user, text_admin=text_category, markup=markups.main_markup)
-        await bot.send_document(chat_id=config.ADMINS['qzark'], document=message.document.file_id)  # qzark
-        await bot.send_document(chat_id=config.ADMINS['zakazy'], document=message.document.file_id)  # zakazy
+        await bot.send_document(chat_id=settings.ADMINS['qzark'], document=message.document.file_id)  # qzark
+        await bot.send_document(chat_id=settings.ADMINS['zakazy'], document=message.document.file_id)  # zakazy
 
     elif msg_text.admin.flag_for_newsletter.get(message.chat.id):
         users_id = models.db_object.db_select_all_users_id()
@@ -594,10 +598,10 @@ async def brief(callback):
         text = msg_text.site.fill_brief()
         if 'site' in callback.data:
             msg_text.site.flag_sites[callback.message.chat.id] = True
-            document = config.SITE_HASH_FILE_ID
+            document = settings.SITE_HASH_FILE_ID
         elif 'design' in callback.data:
             msg_text.design_obj.flag_design[callback.message.chat.id] = True
-            document = config.DESIGN_HASH_FILE_ID
+            document = settings.DESIGN_HASH_FILE_ID
         await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.id)
         await bot.send_message(chat_id=callback.message.chat.id, text=text, reply_markup=markups.clean_markup)
         await bot.send_document(chat_id=callback.message.chat.id, document=document)

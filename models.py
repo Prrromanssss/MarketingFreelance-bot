@@ -1,5 +1,8 @@
-import config
 import sqlite3
+
+import settings
+
+DB_TABLE = 'db_users'
 
 
 class UserData:
@@ -11,12 +14,12 @@ class UserData:
         cursor = conn.cursor()
         username = message.from_user.username
         val = (username, message.chat.id)
-        sql_query = f'SELECT username FROM {config.DB_TABLE} WHERE user_id = ?'
+        sql_query = f'SELECT username FROM {DB_TABLE} WHERE user_id = ?'
         cursor.execute(sql_query, (message.chat.id,))
 
         if cursor.fetchall():
             return
-        sql_query = f'INSERT INTO {config.DB_TABLE} ("username", user_id) VALUES (?, ?)'
+        sql_query = f'INSERT INTO {DB_TABLE} ("username", user_id) VALUES (?, ?)'
         cursor.execute(sql_query, val)
         conn.commit()
 
@@ -26,7 +29,7 @@ class UserData:
         conn = sqlite3.connect(self.name)
         cursor = conn.cursor()
         val = (message.chat.id, )
-        sql_query = f'SELECT username FROM {config.DB_TABLE} WHERE user_id = ?'
+        sql_query = f'SELECT username FROM {DB_TABLE} WHERE user_id = ?'
         cursor.execute(sql_query, val)
         username = cursor.fetchall()[0][0]
         conn.commit()
@@ -36,7 +39,7 @@ class UserData:
         conn = sqlite3.connect(self.name)
         cursor = conn.cursor()
         val = (username,)
-        sql_query = f'SELECT user_id FROM {config.DB_TABLE} WHERE username = ?'
+        sql_query = f'SELECT user_id FROM {DB_TABLE} WHERE username = ?'
         cursor.execute(sql_query, val)
         user_id = cursor.fetchall()[0][0]
         conn.commit()
@@ -45,7 +48,7 @@ class UserData:
     def db_select_all_users(self):
         conn = sqlite3.connect(self.name)
         cursor = conn.cursor()
-        sql_query = f'SELECT username FROM {config.DB_TABLE}'
+        sql_query = f'SELECT username FROM {DB_TABLE}'
         cursor.execute(sql_query)
         usernames = cursor.fetchall()
         conn.commit()
@@ -54,11 +57,11 @@ class UserData:
     def db_select_all_users_id(self):
         conn = sqlite3.connect(self.name)
         cursor = conn.cursor()
-        sql_query = f'SELECT "user_id" FROM {config.DB_TABLE}'
+        sql_query = f'SELECT "user_id" FROM {DB_TABLE}'
         cursor.execute(sql_query)
         users_id = cursor.fetchall()
         conn.commit()
         return users_id
 
 
-db_object = UserData(config.DB_URI)
+db_object = UserData(settings.DB_URI)

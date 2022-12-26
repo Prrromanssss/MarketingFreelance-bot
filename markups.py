@@ -121,5 +121,3 @@ prom_tg_complex_markup = types.InlineKeyboardMarkup()
 prom_tg_complex_markup.add(types.InlineKeyboardButton(text='Заказать услугу', callback_data='prom_tg_7_want'))
 prom_tg_complex_markup.add(types.InlineKeyboardButton(text='Вернуться к списку услуг',
                                                       callback_data='promotion_telegram'))
-
-
