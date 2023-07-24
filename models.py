@@ -19,7 +19,9 @@ class UserData:
 
         if cursor.fetchall():
             return
-        sql_query = f'INSERT INTO {DB_TABLE} ("username", user_id) VALUES (?, ?)'
+        sql_query = (
+            f'INSERT INTO {DB_TABLE} ("username", user_id) VALUES (?, ?)'
+            )
         cursor.execute(sql_query, val)
         conn.commit()
 
